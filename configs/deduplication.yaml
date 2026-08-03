@@ -1,0 +1,102 @@
+# Deduplication Configuration
+# First stage of the thermal image preprocessing pipeline
+
+# Input/Output paths
+paths:
+  raw_datasets_root: "datasets/raw"
+  deduplicated_output: "datasets/deduplicated"
+  metadata_output: "datasets/metadata/deduplication"
+  reports_output: "reports/deduplication"
+
+# Datasets to process
+# Paths are relative to raw_datasets_root
+datasets:
+  - name: "Chilli_Leaves"
+    path: "Chilli Leaves"
+    enabled: true
+  
+  - name: "Okra"
+    path: "Thermal Image Dataset of Okra"
+    enabled: true
+  
+  - name: "No_Mixed"
+    path: "No_mixed-20260728T071937Z-1-001"
+    enabled: true
+
+# Processing options
+processing:
+  # Number of parallel workers for hash computation
+  max_workers: 4
+  
+  # Hash algorithm (sha256, md5, sha1)
+  hash_algorithm: "sha256"
+  
+  # Chunk size for reading files (bytes)
+  chunk_size: 4096
+  
+  # Preserve folder hierarchy in deduplicated output
+  preserve_hierarchy: true
+  
+  # Strategy for selecting which duplicate to keep
+  # Options: "first", "smallest", "largest", "shortest_path"
+  retention_strategy: "first"
+  
+  # Copy or symlink files (copy recommended for portability)
+  file_operation: "copy"
+
+# Duplicate detection
+duplicate_detection:
+  # Image file extensions to process
+  image_extensions:
+    - ".jpg"
+    - ".jpeg"
+    - ".png"
+    - ".bmp"
+    - ".tiff"
+    - ".tif"
+    - ".gif"
+    - ".webp"
+  
+  # Minimum file size to process (bytes, 0 = no limit)
+  min_file_size: 0
+  
+  # Skip hidden files
+  skip_hidden: true
+
+# Reporting
+reporting:
+  # Generate all report formats
+  generate_csv: true
+  generate_json: true
+  generate_markdown: true
+  
+  # Include detailed duplicate groups in JSON
+  include_duplicate_groups: true
+  
+  # Maximum duplicates to list per group in reports
+  max_duplicates_per_group: 100
+
+# Logging
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR
+  level: "INFO"
+  
+  # Log file path (relative to reports_output)
+  log_file: "deduplication.log"
+  
+  # Console output
+  console_output: true
+
+# Safety options
+safety:
+  # Never delete files from raw datasets
+  preserve_raw_data: true
+  
+  # Verify copied files (hash comparison)
+  verify_copies: true
+  
+  # Create backup of metadata before overwriting
+  backup_metadata: true
+  
+  # Dry run mode (analyze only, don't copy files)
+  dry_run: false

@@ -1,0 +1,304 @@
+# Example preprocessing configurations
+# Copy sections from this file to preprocessing.yaml for different experiments
+
+# =============================================================================
+# EXAMPLE 1: Paper Default (Resize only to 640x480)
+# This is the current default configuration
+# =============================================================================
+example_paper_default:
+  preprocessing:
+    preserve_hierarchy: true
+    
+    resize:
+      enabled: true
+      width: 640
+      height: 480
+      preserve_aspect_ratio: false
+      interpolation:
+        downsample: "area"
+        upsample: "linear"
+    
+    grayscale:
+      enabled: false
+    
+    normalization:
+      enabled: false
+    
+    histogram_equalization:
+      enabled: false
+    
+    clahe:
+      enabled: false
+    
+    padding:
+      enabled: false
+
+
+# =============================================================================
+# EXAMPLE 2: Grayscale + Resize
+# Convert to grayscale and resize for models that use single-channel input
+# =============================================================================
+example_grayscale:
+  preprocessing:
+    preserve_hierarchy: true
+    
+    resize:
+      enabled: true
+      width: 640
+      height: 480
+      preserve_aspect_ratio: false
+      interpolation:
+        downsample: "area"
+        upsample: "linear"
+    
+    grayscale:
+      enabled: true
+    
+    normalization:
+      enabled: false
+    
+    histogram_equalization:
+      enabled: false
+    
+    clahe:
+      enabled: false
+    
+    padding:
+      enabled: false
+
+
+# =============================================================================
+# EXAMPLE 3: CLAHE Enhancement + Normalization
+# Apply CLAHE for contrast enhancement, then normalize to [0, 1]
+# Good for improving feature detection
+# =============================================================================
+example_clahe_normalized:
+  preprocessing:
+    preserve_hierarchy: true
+    
+    resize:
+      enabled: true
+      width: 640
+      height: 480
+      preserve_aspect_ratio: false
+      interpolation:
+        downsample: "area"
+        upsample: "linear"
+    
+    grayscale:
+      enabled: false
+    
+    normalization:
+      enabled: true
+      method: "minmax"
+      min_value: 0.0
+      max_value: 1.0
+      per_image: true
+    
+    histogram_equalization:
+      enabled: false
+    
+    clahe:
+      enabled: true
+      clip_limit: 2.0
+      tile_grid_size: [8, 8]
+    
+    padding:
+      enabled: false
+
+
+# =============================================================================
+# EXAMPLE 4: Z-score Normalization
+# Standardize images to mean=0, std=1 (common for deep learning)
+# =============================================================================
+example_zscore:
+  preprocessing:
+    preserve_hierarchy: true
+    
+    resize:
+      enabled: true
+      width: 640
+      height: 480
+      preserve_aspect_ratio: false
+      interpolation:
+        downsample: "area"
+        upsample: "linear"
+    
+    grayscale:
+      enabled: false
+    
+    normalization:
+      enabled: true
+      method: "zscore"
+      per_image: true
+    
+    histogram_equalization:
+      enabled: false
+    
+    clahe:
+      enabled: false
+    
+    padding:
+      enabled: false
+
+
+# =============================================================================
+# EXAMPLE 5: Preserve Aspect Ratio with Padding
+# Resize while preserving aspect ratio, then pad to target size
+# =============================================================================
+example_padded:
+  preprocessing:
+    preserve_hierarchy: true
+    
+    resize:
+      enabled: true
+      width: 640
+      height: 480
+      preserve_aspect_ratio: true
+      interpolation:
+        downsample: "area"
+        upsample: "linear"
+    
+    grayscale:
+      enabled: false
+    
+    normalization:
+      enabled: false
+    
+    histogram_equalization:
+      enabled: false
+    
+    clahe:
+      enabled: false
+    
+    padding:
+      enabled: true
+      mode: "constant"  # or "edge", "reflect", "symmetric"
+      fill_value: 0
+
+
+# =============================================================================
+# EXAMPLE 6: Full Pipeline
+# All operations enabled (for experimentation)
+# =============================================================================
+example_full_pipeline:
+  preprocessing:
+    preserve_hierarchy: true
+    
+    resize:
+      enabled: true
+      width: 640
+      height: 480
+      preserve_aspect_ratio: false
+      interpolation:
+        downsample: "area"
+        upsample: "linear"
+    
+    grayscale:
+      enabled: true
+    
+    normalization:
+      enabled: true
+      method: "minmax"
+      min_value: 0.0
+      max_value: 1.0
+      per_image: true
+    
+    histogram_equalization:
+      enabled: false  # Don't use with CLAHE
+    
+    clahe:
+      enabled: true
+      clip_limit: 2.0
+      tile_grid_size: [8, 8]
+    
+    padding:
+      enabled: false
+
+
+# =============================================================================
+# EXAMPLE 7: Histogram Equalization Only
+# Apply histogram equalization for global contrast enhancement
+# =============================================================================
+example_histogram_eq:
+  preprocessing:
+    preserve_hierarchy: true
+    
+    resize:
+      enabled: true
+      width: 640
+      height: 480
+      preserve_aspect_ratio: false
+      interpolation:
+        downsample: "area"
+        upsample: "linear"
+    
+    grayscale:
+      enabled: false
+    
+    normalization:
+      enabled: false
+    
+    histogram_equalization:
+      enabled: true
+    
+    clahe:
+      enabled: false
+    
+    padding:
+      enabled: false
+
+
+# =============================================================================
+# EXAMPLE 8: Different Interpolation Methods
+# Use cubic interpolation for both downsample and upsample
+# =============================================================================
+example_cubic_interpolation:
+  preprocessing:
+    preserve_hierarchy: true
+    
+    resize:
+      enabled: true
+      width: 640
+      height: 480
+      preserve_aspect_ratio: false
+      interpolation:
+        downsample: "cubic"
+        upsample: "cubic"
+    
+    grayscale:
+      enabled: false
+    
+    normalization:
+      enabled: false
+    
+    histogram_equalization:
+      enabled: false
+    
+    clahe:
+      enabled: false
+    
+    padding:
+      enabled: false
+
+
+# =============================================================================
+# NOTES:
+# 
+# Operation Order:
+# 1. Resize
+# 2. Grayscale conversion
+# 3. Histogram equalization
+# 4. CLAHE
+# 5. Normalization
+# 6. Padding
+#
+# Recommendations:
+# - Do NOT enable both histogram_equalization and CLAHE (choose one)
+# - Apply contrast enhancement (CLAHE/histeq) BEFORE normalization
+# - Padding only makes sense with preserve_aspect_ratio=true
+# - For thermal images, CLAHE often works better than global histogram eq
+# - Use zscore normalization if your model expects zero-mean input
+# - Use minmax normalization if your model expects [0,1] or [0,255] input
+#
+# =============================================================================

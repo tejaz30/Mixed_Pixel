@@ -1,0 +1,165 @@
+# Preprocessing Configuration
+# Thermal image preprocessing pipeline for mixed-pixel detection
+
+# Input/Output paths
+paths:
+  input_root: "datasets/deduplicated"
+  output_root: "datasets/processed"
+  metadata_output: "datasets/metadata/preprocessing"
+  reports_output: "reports/preprocessing"
+
+# Datasets to process
+datasets:
+  - name: "Chilli_Leaves"
+    enabled: true
+  
+  - name: "Okra"
+    enabled: true
+  
+  - name: "No_Mixed"
+    enabled: true
+
+# Image loading options
+image_loading:
+  # Supported extensions
+  valid_extensions:
+    - ".jpg"
+    - ".jpeg"
+    - ".png"
+    - ".tif"
+    - ".tiff"
+    - ".bmp"
+  
+  # Load mode (unchanged, rgb, grayscale)
+  load_mode: "unchanged"  # Preserve original image type
+  
+  # Skip corrupted images
+  skip_corrupted: true
+
+# Preprocessing operations
+# Enable/disable operations as needed
+# Default configuration reproduces paper requirements
+
+preprocessing:
+  # Preserve directory hierarchy in output
+  preserve_hierarchy: true
+  
+  # RESIZE OPERATION (REQUIRED BY PAPER)
+  # Paper requirement: All images must be 640x480
+  resize:
+    enabled: true
+    width: 640
+    height: 480
+    preserve_aspect_ratio: false
+    # Interpolation method based on resize direction
+    # Options: nearest, linear, cubic, area, lanczos
+    interpolation:
+      downsample: "area"    # INTER_AREA for downsampling (best quality)
+      upsample: "linear"    # INTER_LINEAR for upsampling
+  
+  # GRAYSCALE CONVERSION
+  # Convert images to single channel grayscale
+  grayscale:
+    enabled: false
+  
+  # NORMALIZATION (REQUIRED BY PAPER)
+  # Paper: "Each image was converted to 'float32' format and normalized 
+  # by dividing the pixel values by 255.0"
+  normalization:
+    enabled: true
+    # Options: minmax, zscore, none
+    method: "minmax"
+    # For minmax: scale to [min_value, max_value]
+    min_value: 0.0
+    max_value: 1.0
+    # For zscore: standardize to mean=0, std=1
+    # Use per-image statistics or dataset statistics
+    per_image: true
+  
+  # HISTOGRAM EQUALIZATION
+  # Enhance contrast using histogram equalization
+  histogram_equalization:
+    enabled: false
+    # If image is grayscale, use standard equalization
+    # If image is color, equalize value channel in HSV
+  
+  # CLAHE (Contrast Limited Adaptive Histogram Equalization)
+  # Adaptive histogram equalization with contrast limiting
+  clahe:
+    enabled: false
+    clip_limit: 2.0
+    tile_grid_size: [8, 8]
+    # For color images, apply to value channel in HSV
+  
+  # PADDING
+  # Add padding to images (useful if preserve_aspect_ratio is true)
+  padding:
+    enabled: false
+    # Padding mode: constant, edge, reflect, symmetric
+    mode: "constant"
+    # Fill value for constant padding (0-255)
+    fill_value: 0
+
+# Processing options
+processing:
+  # Number of parallel workers
+  max_workers: 4
+  
+  # Show progress bars
+  show_progress: true
+  
+  # Overwrite existing processed images
+  overwrite: true
+  
+  # Verify processed images after writing
+  verify: true
+
+# Metadata generation
+metadata:
+  # Generate CSV metadata file
+  generate_csv: true
+  
+  # Generate JSON metadata file
+  generate_json: true
+  
+  # Include additional statistics in metadata
+  include_stats: true
+  
+  # Fields to include
+  fields:
+    - "original_path"
+    - "processed_path"
+    - "dataset"
+    - "class"
+    - "filename"
+    - "original_width"
+    - "original_height"
+    - "original_resolution"
+    - "processed_width"
+    - "processed_height"
+    - "processed_resolution"
+    - "file_size_original"
+    - "file_size_processed"
+    - "processing_time"
+
+# Logging
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR
+  level: "INFO"
+  
+  # Log file path (relative to reports_output)
+  log_file: "preprocessing.log"
+  
+  # Console output
+  console_output: true
+
+# Quality control
+quality:
+  # Check if processed images are readable
+  verify_readable: true
+  
+  # Check if resolution matches target
+  verify_resolution: true
+  
+  # Maximum allowed failures before stopping
+  max_failures: 10

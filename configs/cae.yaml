@@ -1,0 +1,139 @@
+# Configuration for Convolutional Autoencoder (CAE)
+# Baseline model for thermal image mixed-pixel detection
+# Based on Section 4.1.2 and 4.1.3 of the paper
+
+# Model Architecture
+model:
+  # Input dimensions (paper specification)
+  input_channels: 3      # RGB thermal images
+  input_height: 480      # Height after preprocessing
+  input_width: 640       # Width after preprocessing
+  
+  # Encoder filters (paper specification: 1, 6, 8)
+  encoder_filters:
+    - 1
+    - 6
+    - 8
+  
+  # Convolution parameters (configurable, not specified in paper)
+  kernel_size: 3         # 3x3 convolution kernels
+  pool_size: 2           # 2x2 max pooling
+  padding: 1             # Same padding
+
+# Training Configuration (paper specification)
+training:
+  # Optimizer
+  optimizer: "adam"
+  learning_rate: 0.001   # Paper: 0.001
+  
+  # Training schedule
+  max_epochs: 500        # Paper: 500
+  batch_size: 32         # Not specified in paper, configurable
+  
+  # Early stopping (paper specification)
+  early_stopping:
+    enabled: true
+    patience: 5          # Paper: 5 epochs
+    min_delta: 0.0       # Minimum improvement threshold
+    mode: "min"          # Monitor validation loss (minimize)
+  
+  # Validation split (paper: 80/20)
+  validation_split: 0.2
+  
+  # Checkpointing
+  save_frequency: 10     # Save checkpoint every N epochs
+  save_best_only: false  # Keep all checkpoints or only best
+
+# Data Configuration
+data:
+  # Dataset paths
+  dataset_root: "datasets/processed"
+  
+  # Data loading
+  num_workers: 4         # DataLoader workers
+  pin_memory: true       # Pin memory for GPU training
+  shuffle: true          # Shuffle training data
+  
+  # Data split (paper: 80/20 train/val)
+  # Test split handled separately
+  train_ratio: 0.8
+  val_ratio: 0.2
+  
+  # Random seed for reproducibility
+  seed: 42
+  
+  # Augmentation (not specified in paper, disabled by default)
+  augmentation:
+    enabled: false
+    horizontal_flip: false
+    vertical_flip: false
+    rotation: false
+    color_jitter: false
+
+# Loss Configuration
+loss:
+  # Reconstruction loss (paper: MSE)
+  criterion: "mse"       # Mean Squared Error
+  reduction: "mean"      # Average over batch
+  
+  # Loss weights (for future extensions)
+  reconstruction_weight: 1.0
+
+# Paths
+paths:
+  # Checkpoints
+  checkpoint_dir: "checkpoints/cae"
+  
+  # Logs
+  log_dir: "logs/cae"
+  tensorboard_dir: "runs/cae"
+  
+  # Results
+  results_dir: "results/cae"
+
+# Hardware
+hardware:
+  # Device selection
+  device: "auto"         # "auto", "cuda", "cuda:0", "cpu"
+  
+  # Multi-GPU (if available)
+  use_multi_gpu: false
+  gpu_ids: [0]
+
+# Logging
+logging:
+  level: "INFO"          # DEBUG, INFO, WARNING, ERROR
+  log_to_file: true      # Save logs to file
+  log_to_console: true   # Print logs to console
+  
+  # TensorBoard
+  tensorboard:
+    enabled: true
+    log_interval: 10     # Log every N batches
+
+# Reproducibility
+reproducibility:
+  seed: 42               # Random seed
+  deterministic: true    # Use deterministic algorithms (may be slower)
+
+# Inference Configuration
+inference:
+  # Batch size for inference
+  batch_size: 16
+  
+  # Reconstruction error computation
+  error_reduction: "none"  # "none", "channel", "spatial", "mean", "sum"
+  
+  # Visualization
+  save_visualizations: true
+  num_visualizations: 10    # Number of samples to visualize
+
+# Experiment Tracking
+experiment:
+  name: "cae_baseline"       # Experiment name
+  description: "Baseline Convolutional Autoencoder for thermal image reconstruction"
+  tags:
+    - "baseline"
+    - "autoencoder"
+    - "thermal"
+  notes: "Implements CAE as described in paper Section 4.1"

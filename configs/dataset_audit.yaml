@@ -1,0 +1,38 @@
+# Dataset Audit Configuration
+# Configuration for comprehensive thermal image dataset auditing
+
+# List of datasets to audit
+datasets:
+  - name: "Chilli_Leaves"
+    path: "Chilli Leaves"
+    description: "Chilli leaves dataset with augmented training, testing, and validation splits"
+  
+  - name: "No_Mixed"
+    path: "No_mixed-20260728T071937Z-1-001"
+    description: "No mixed pixel dataset"
+  
+  - name: "Okra"
+    path: "Thermal Image Dataset of Okra"
+    description: "Thermal images of Okra plants"
+
+# Output configuration
+output:
+  reports_dir: "reports"
+  figures_dir: "reports/figures"
+
+# Processing configuration
+processing:
+  max_workers: 4  # Number of parallel workers for image processing
+  
+# Visualization configuration
+visualization:
+  dpi: 150  # Resolution for saved figures
+  figsize: [12, 8]  # Default figure size (width, height)
+  samples_per_grid: 16  # Number of images per sample grid
+  
+# Analysis configuration
+analysis:
+  compute_histograms: true
+  detect_duplicates: true
+  check_corruption: true
+  generate_sample_grids: true

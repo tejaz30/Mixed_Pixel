@@ -1,0 +1,114 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Logs
+*.log
+logs/
+outputs/logs/
+
+# Data (raw datasets are tracked, but processed outputs are not)
+datasets/deduplicated/
+datasets/processed/
+datasets/patches/
+datasets/splits/
+
+# Outputs
+outputs/checkpoints/
+outputs/predictions/
+outputs/masks/
+outputs/corrected_images/
+outputs/figures/
+!outputs/.gitkeep
+
+# Reports (optional: comment out if you want to track reports)
+reports/
+!reports/.gitkeep
+
+# Model checkpoints and training outputs
+*.pth
+*.pt
+*.ckpt
+*.h5
+*.pb
+
+# CAE Training Outputs
+checkpoints/
+!checkpoints/.gitkeep
+runs/
+!runs/.gitkeep
+results/
+!results/.gitkeep
+
+# TensorBoard
+events.out.tfevents.*
+
+# Training logs
+logs/cae/
+logs/ldm/
+logs/cfc/
+
+# Temporary files
+*.tmp
+*.bak
+*.cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Environment variables
+.env
+.env.local
+
+# Config overrides (if you create local configs)
+*local.yaml
+*local.yml
+
+*.md 
+!README.md
+
+# Development Files/Folders
+tests
+dataset_audit
+datasets
+*.pdf
