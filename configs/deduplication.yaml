@@ -22,6 +22,10 @@ datasets:
   - name: "No_Mixed"
     path: "No_mixed-20260728T071937Z-1-001"
     enabled: true
+  
+  - name: "Paddy_Leaves"
+    path: "Paddy Leaves"
+    enabled: true
 
 # Processing options
 processing:

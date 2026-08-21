@@ -81,10 +81,10 @@ loss:
 
 # Paths
 paths:
-  # Checkpoints
+  # Checkpoints (per-dataset subdirectories will be created automatically)
   checkpoint_dir: "checkpoints/cae"
   
-  # Logs
+  # Logs (per-dataset subdirectories will be created automatically)
   log_dir: "logs/cae"
   tensorboard_dir: "runs/cae"
   
@@ -94,7 +94,7 @@ paths:
 # Hardware
 hardware:
   # Device selection
-  device: "auto"         # "auto", "cuda", "cuda:0", "cpu"
+  device: "cuda"         # "auto", "cuda", "cuda:0", "cpu"
   
   # Multi-GPU (if available)
   use_multi_gpu: false
@@ -108,7 +108,7 @@ logging:
   
   # TensorBoard
   tensorboard:
-    enabled: true
+    enabled: false
     log_interval: 10     # Log every N batches
 
 # Reproducibility

@@ -18,6 +18,9 @@ datasets:
   
   - name: "No_Mixed"
     enabled: true
+  
+  - name: "Paddy_Leaves"
+    enabled: true
 
 # Image loading options
 image_loading:

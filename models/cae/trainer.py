@@ -17,7 +17,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from torch.utils.tensorboard import SummaryWriter
 import numpy as np
 
 from .model import ConvolutionalAutoencoder
@@ -158,9 +157,14 @@ class CAETrainer:
             mode='min'
         )
         
-        # TensorBoard
+        # TensorBoard (conditional import to avoid errors if not available)
         if tensorboard_dir:
-            self.writer = SummaryWriter(log_dir=str(tensorboard_dir))
+            try:
+                from torch.utils.tensorboard import SummaryWriter
+                self.writer = SummaryWriter(log_dir=str(tensorboard_dir))
+            except Exception as e:
+                logger.warning(f"TensorBoard not available: {e}")
+                self.writer = None
         else:
             self.writer = None
         
@@ -348,7 +352,7 @@ class CAETrainer:
                     self.best_model_state = {
                         k: v.cpu().clone() for k, v in self.model.state_dict().items()
                     }
-                    logger.info(f"✓ New best model (val_loss: {self.best_val_loss:.6f})")
+                    logger.info(f"[BEST] New best model (val_loss: {self.best_val_loss:.6f})")
                 
                 # Save checkpoint periodically
                 if (epoch + 1) % self.save_frequency == 0:
@@ -376,12 +380,12 @@ class CAETrainer:
         # Restore best model
         if self.best_model_state is not None:
             self.model.load_state_dict(self.best_model_state)
-            logger.info("✓ Restored best model weights")
+            logger.info("[RESTORED] Restored best model weights")
         
         # Save final model
         final_path = self.checkpoint_dir / "best_model.pth"
         self.save_checkpoint(final_path, save_training_state=False)
-        logger.info(f"✓ Saved best model to: {final_path}")
+        logger.info(f"[SAVED] Saved best model to: {final_path}")
         
         # Close TensorBoard
         if self.writer:
