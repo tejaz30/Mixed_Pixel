@@ -1,0 +1,121 @@
+# Configuration for KL-Regularized Autoencoder (Experiment 1)
+# First-stage compression model for LDM
+
+experiment:
+  name: "exp1_kl"
+  description: "KL-regularized first-stage autoencoder for thermal imagery"
+  type: "first_stage_kl"
+  random_seed: 42
+
+# Model architecture
+model:
+  type: "kl_autoencoder"
+  in_channels: 3
+  latent_channels: 4
+  base_channels: 64  # Reduced from 128 for 6GB GPU
+  channel_multipliers: [1, 2, 4, 4]  # 3 downsamplings -> 8x compression
+  num_res_blocks: 2
+  
+  # KL-specific
+  kl_weight: 1.0e-6  # Following Rombach et al.
+
+# Data configuration
+data:
+  dataset_root: "datasets/processed"
+  load_mode: "rgb"
+  
+  # Splitting
+  train_ratio: 0.8
+  val_ratio: 0.2
+  test_ratio: 0.0  # Use validation for testing in this experiment
+  
+  # Data loading
+  batch_size: 2  # Reduced for 6GB GPU
+  num_workers: 4
+  pin_memory: true
+  shuffle: true
+  seed: 42
+
+# Training configuration
+training:
+  max_epochs: 100
+  learning_rate: 1.0e-3  # Adam default from CAE baseline
+  
+  # Optimizer
+  optimizer: "adam"
+  betas: [0.9, 0.999]
+  weight_decay: 0.0
+  
+  # Learning rate schedule
+  lr_scheduler:
+    enabled: false
+    type: "reduce_on_plateau"
+    patience: 5
+    factor: 0.5
+  
+  # Early stopping
+  early_stopping:
+    enabled: true
+    patience: 5
+    min_delta: 1.0e-6
+    monitor: "val_loss"
+  
+  # Checkpointing
+  save_frequency: 10  # Save every N epochs
+  save_best_only: false
+
+# Hardware
+hardware:
+  device: "auto"  # auto, cuda, or cpu
+  mixed_precision: false
+
+# Paths
+paths:
+  checkpoint_dir: "checkpoints/experiment1/kl"
+  log_dir: "logs/experiment1/kl"
+  tensorboard_dir: "runs/experiment1/kl"
+  output_dir: "outputs/experiment1/kl"
+
+# Logging
+logging:
+  level: "INFO"
+  log_to_file: true
+  log_to_console: true
+  
+  tensorboard:
+    enabled: false
+    log_images: true
+    log_frequency: 50  # Log every N batches
+  
+  # Metrics to track
+  metrics:
+    - "loss"
+    - "reconstruction_loss"
+    - "kl_loss"
+    - "mse"
+    - "mae"
+    - "psnr"
+
+# Evaluation
+evaluation:
+  # Standard metrics
+  compute_ssim: true
+  compute_lpips: false  # Optional, requires lpips package
+  
+  # Boundary-focused metrics
+  boundary_metrics:
+    enabled: true
+    threshold_percentile: 75.0  # High-gradient region threshold
+    gradient_method: "sobel"
+  
+  # Visualization
+  num_vis_samples: 16
+  save_reconstructions: true
+  save_error_maps: true
+  save_boundary_masks: true
+
+# Reproducibility
+reproducibility:
+  deterministic: true
+  seed: 42
+  benchmark: false

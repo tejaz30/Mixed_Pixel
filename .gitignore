@@ -113,3 +113,10 @@ dataset_audit
 datasets
 *.pdf
 *.docx
+*.jpg
+*.png
+*.txt
+!requirements.txt
+
+# Local files
+scripts/

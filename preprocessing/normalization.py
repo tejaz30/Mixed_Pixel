@@ -41,7 +41,7 @@ class ImageNormalizer:
         self.dataset_min = None
         self.dataset_max = None
         
-        valid_methods = ['minmax', 'zscore', 'none']
+        valid_methods = ['minmax', 'zscore', 'divide255', 'none']
         if self.method not in valid_methods:
             raise ValueError(f"Invalid normalization method: {method}. Choose from {valid_methods}")
     
@@ -70,6 +70,8 @@ class ImageNormalizer:
             normalized = self._minmax_normalize(image_float, metadata)
         elif self.method == 'zscore':
             normalized = self._zscore_normalize(image_float, metadata)
+        elif self.method == 'divide255':
+            normalized = self._divide255_normalize(image_float, metadata)
         else:
             normalized = image_float
         
@@ -117,6 +119,34 @@ class ImageNormalizer:
         
         # Scale to [min_value, max_value]
         normalized = normalized * (self.max_value - self.min_value) + self.min_value
+        
+        return normalized
+    
+    def _divide255_normalize(
+        self,
+        image: np.ndarray,
+        metadata: Dict[str, Any]
+    ) -> np.ndarray:
+        """
+        Fixed division by 255.0 as specified in paper Section 4.1.3.
+        
+        "Each image was converted to 'float32' format and normalized 
+        by dividing the pixel values by 255.0"
+        
+        Args:
+            image: Input image as float32.
+            metadata: Dictionary to update with normalization info.
+            
+        Returns:
+            Normalized image.
+        """
+        metadata['divide_factor'] = 255.0
+        
+        # Simple division by 255.0
+        normalized = image / 255.0
+        
+        # Clip to [0, 1] to handle any potential overflow
+        normalized = np.clip(normalized, 0.0, 1.0)
         
         return normalized
     

@@ -1,0 +1,145 @@
+# Configuration for Reconstruction Quality Evaluation
+# Implements MSE and SSIM evaluation as specified in the paper
+
+# Experiment Information
+experiment:
+  name: "cae_reconstruction_evaluation"
+  description: "Baseline CAE reconstruction quality evaluation using MSE and SSIM"
+  architecture: "cae"  # cae, ldm, coc, cfc (for future use)
+
+# Model Architecture (must match training config)
+model:
+  input_channels: 3
+  input_height: 480
+  input_width: 640
+  encoder_filters: [1, 6, 8]
+  kernel_size: 3
+  pool_size: 2
+  padding: 1
+
+# Dataset Configuration
+data:
+  # Root directory for processed datasets
+  dataset_root: "datasets/processed"
+  
+  # Datasets to evaluate
+  datasets:
+    - "Chilli_Leaves"
+    - "Okra"
+    - "Paddy_Leaves"
+    - "No_Mixed"
+  
+  # Data loading
+  batch_size: 16
+  num_workers: 4
+  pin_memory: true
+  
+  # Reproducibility
+  seed: 42
+
+# Checkpoint Paths
+# These should point to best_model.pth for each dataset
+checkpoints:
+  Chilli_Leaves: "checkpoints/cae/Chilli_Leaves/best_model.pth"
+  Okra: "checkpoints/cae/Okra/best_model.pth"
+  Paddy_Leaves: "checkpoints/cae/Paddy_Leaves/best_model.pth"
+  No_Mixed: "checkpoints/cae/No_Mixed/best_model.pth"
+
+# Metric Configuration
+metrics:
+  # Data range for images
+  # Images are normalized to [0, 1] during preprocessing
+  data_range: 1.0
+  
+  # SSIM Parameters
+  # All parameters are explicit for reproducibility
+  ssim:
+    # Window size (must be odd)
+    # Paper typically uses 7 or 11
+    win_size: 7
+    
+    # Channel axis for color images
+    # -1 or 2 for (H, W, C) format
+    channel_axis: -1
+    
+    # Gaussian weighting
+    gaussian_weights: true
+    
+    # Standard deviation for Gaussian kernel
+    sigma: 1.5
+    
+    # Sample covariance vs biased estimator
+    use_sample_covariance: true
+    
+    # SSIM algorithm parameters
+    k1: 0.01
+    k2: 0.03
+
+# Output Configuration
+output:
+  # Base output directory
+  output_dir: "outputs/evaluation/cae"
+  
+  # Save per-image metrics to CSV
+  save_per_image: true
+  per_image_filename: "per_image_metrics.csv"
+  
+  # Save aggregated dataset metrics
+  save_aggregated: true
+  aggregated_filename: "dataset_metrics.csv"
+  
+  # Save evaluation configuration
+  save_config: true
+  config_filename: "evaluation_config.json"
+  
+  # Save error maps for all images
+  save_error_maps: true
+  
+  # Visualization settings
+  visualization:
+    enabled: true
+    
+    # Number of sample reconstructions per dataset
+    num_samples: 5
+    
+    # Create distribution plots
+    create_distributions: true
+    
+    # Create boxplots
+    create_boxplots: true
+    
+    # Create comparison bar charts
+    create_comparisons: true
+    
+    # Create summary figure
+    create_summary: true
+    
+    # Figure settings
+    dpi: 150
+    figsize: [15, 5]
+
+# Hardware Configuration
+hardware:
+  # Device for inference
+  device: "cuda"  # "cuda", "cuda:0", "cpu"
+  
+  # Use multiple GPUs (if available)
+  use_multi_gpu: false
+
+# Logging Configuration
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+  log_to_file: true
+  log_filename: "evaluation.log"
+
+# Paper Comparison (for reference)
+# The paper reports for Dataset III (before correction):
+#   SSIM = 0.4184
+#   MSE  = 0.1088
+# After correction:
+#   SSIM = 0.8201
+#   MSE  = 0.0022
+#
+# Note: This evaluation only measures reconstruction quality
+# without the correction stage. Direct comparison may not be
+# meaningful due to different preprocessing and splits.

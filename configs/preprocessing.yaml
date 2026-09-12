@@ -70,8 +70,8 @@ preprocessing:
   # by dividing the pixel values by 255.0"
   normalization:
     enabled: true
-    # Options: minmax, zscore, none
-    method: "minmax"
+    # Options: divide255 (paper spec), minmax, zscore, none
+    method: "divide255"
     # For minmax: scale to [min_value, max_value]
     min_value: 0.0
     max_value: 1.0

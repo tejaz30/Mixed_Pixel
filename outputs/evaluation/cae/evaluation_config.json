@@ -1,0 +1,86 @@
+{
+  "evaluation_timestamp": "2026-08-29T15:33:55.707557",
+  "config": {
+    "experiment": {
+      "name": "cae_reconstruction_evaluation",
+      "description": "Baseline CAE reconstruction quality evaluation using MSE and SSIM",
+      "architecture": "cae"
+    },
+    "model": {
+      "input_channels": 3,
+      "input_height": 480,
+      "input_width": 640,
+      "encoder_filters": [
+        1,
+        6,
+        8
+      ],
+      "kernel_size": 3,
+      "pool_size": 2,
+      "padding": 1
+    },
+    "data": {
+      "dataset_root": "datasets/processed",
+      "datasets": [
+        "Chilli_Leaves",
+        "Okra",
+        "Paddy_Leaves",
+        "No_Mixed"
+      ],
+      "batch_size": 16,
+      "num_workers": 4,
+      "pin_memory": true,
+      "seed": 42
+    },
+    "checkpoints": {
+      "Chilli_Leaves": "checkpoints/cae/Chilli_Leaves/best_model.pth",
+      "Okra": "checkpoints/cae/Okra/best_model.pth",
+      "Paddy_Leaves": "checkpoints/cae/Paddy_Leaves/best_model.pth",
+      "No_Mixed": "checkpoints/cae/No_Mixed/best_model.pth"
+    },
+    "metrics": {
+      "data_range": 1.0,
+      "ssim": {
+        "win_size": 7,
+        "channel_axis": -1,
+        "gaussian_weights": true,
+        "sigma": 1.5,
+        "use_sample_covariance": true,
+        "k1": 0.01,
+        "k2": 0.03
+      }
+    },
+    "output": {
+      "output_dir": "outputs/evaluation/cae",
+      "save_per_image": true,
+      "per_image_filename": "per_image_metrics.csv",
+      "save_aggregated": true,
+      "aggregated_filename": "dataset_metrics.csv",
+      "save_config": true,
+      "config_filename": "evaluation_config.json",
+      "save_error_maps": true,
+      "visualization": {
+        "enabled": true,
+        "num_samples": 5,
+        "create_distributions": true,
+        "create_boxplots": true,
+        "create_comparisons": true,
+        "create_summary": true,
+        "dpi": 150,
+        "figsize": [
+          15,
+          5
+        ]
+      }
+    },
+    "hardware": {
+      "device": "cuda",
+      "use_multi_gpu": false
+    },
+    "logging": {
+      "level": "INFO",
+      "log_to_file": true,
+      "log_filename": "evaluation.log"
+    }
+  }
+}

@@ -1,5 +1,4 @@
 # Requirements for Mixed Pixels Detection Project
-# Dataset Audit Module
 
 # Core dependencies
 numpy>=1.24.0
@@ -9,6 +8,17 @@ opencv-python>=4.8.0
 Pillow>=10.0.0
 PyYAML>=6.0
 
+# Deep Learning
+torch>=2.0.0
+torchvision>=0.15.0
+tensorboard>=2.13.0
+
+# Image metrics
+scikit-image>=0.21.0
+
+# Visualization
+seaborn>=0.12.0
+
 # Utilities
 tqdm>=4.65.0
 tabulate>=0.9.0  # For markdown table generation in pandas
@@ -16,3 +26,4 @@ tabulate>=0.9.0  # For markdown table generation in pandas
 # Optional: PDF generation (uncomment if needed)
 # reportlab>=4.0.0
 # markdown>=3.4.0
+# lpips>=0.1.4  # For perceptual loss (optional)
