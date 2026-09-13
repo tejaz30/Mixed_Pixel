@@ -120,3 +120,5 @@ datasets
 
 # Local files
 scripts/
+!CAE_ARCHITECTURE_README.md
+!LDM_FIRST_STAGE_README.md
