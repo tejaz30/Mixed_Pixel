@@ -2,8 +2,8 @@
 # First-stage compression model for LDM
 
 experiment:
-  name: "exp1_kl"
-  description: "KL-regularized first-stage autoencoder for thermal imagery"
+  name: "exp1_kl_no_mixed"
+  description: "KL-regularized first-stage autoencoder for thermal imagery - No_Mixed dataset"
   type: "first_stage_kl"
   random_seed: 42
 
@@ -21,7 +21,7 @@ model:
 
 # Data configuration
 data:
-  dataset_root: "datasets/processed"
+  dataset_root: "datasets/processed/No_Mixed"
   load_mode: "rgb"
   
   # Splitting
@@ -30,7 +30,7 @@ data:
   test_ratio: 0.0  # Use validation for testing in this experiment
   
   # Data loading
-  batch_size: 2  # Reduced for 6GB GPU
+  batch_size: 4  # Balanced for 6GB GPU
   num_workers: 4
   pin_memory: true
   shuffle: true
@@ -71,10 +71,10 @@ hardware:
 
 # Paths
 paths:
-  checkpoint_dir: "checkpoints/experiment1/kl"
-  log_dir: "logs/experiment1/kl"
-  tensorboard_dir: "runs/experiment1/kl"
-  output_dir: "outputs/experiment1/kl"
+  checkpoint_dir: "checkpoints/experiment1/kl_no_mixed"
+  log_dir: "logs/experiment1/kl_no_mixed"
+  tensorboard_dir: "runs/experiment1/kl_no_mixed"
+  output_dir: "outputs/experiment1/kl_no_mixed"
 
 # Logging
 logging:
@@ -84,7 +84,7 @@ logging:
   
   tensorboard:
     enabled: false
-    log_images: true
+    log_images: false
     log_frequency: 50  # Log every N batches
   
   # Metrics to track

@@ -2,8 +2,8 @@
 # First-stage compression model for LDM
 
 experiment:
-  name: "exp1_vq"
-  description: "VQ-regularized first-stage autoencoder for thermal imagery"
+  name: "exp1_vq_no_mixed"
+  description: "VQ-regularized first-stage autoencoder for thermal imagery - No_Mixed dataset"
   type: "first_stage_vq"
   random_seed: 42
 
@@ -23,7 +23,7 @@ model:
 
 # Data configuration
 data:
-  dataset_root: "datasets/processed"
+  dataset_root: "datasets/processed/No_Mixed"
   load_mode: "rgb"
   
   # Splitting
@@ -32,7 +32,7 @@ data:
   test_ratio: 0.0  # Use validation for testing in this experiment
   
   # Data loading
-  batch_size: 2  # Reduced for 6GB GPU
+  batch_size: 4  # Balanced for 6GB GPU
   num_workers: 4
   pin_memory: true
   shuffle: true
@@ -73,10 +73,10 @@ hardware:
 
 # Paths
 paths:
-  checkpoint_dir: "checkpoints/experiment1/vq"
-  log_dir: "logs/experiment1/vq"
-  tensorboard_dir: "runs/experiment1/vq"
-  output_dir: "outputs/experiment1/vq"
+  checkpoint_dir: "checkpoints/experiment1/vq_no_mixed"
+  log_dir: "logs/experiment1/vq_no_mixed"
+  tensorboard_dir: "runs/experiment1/vq_no_mixed"
+  output_dir: "outputs/experiment1/vq_no_mixed"
 
 # Logging
 logging:
@@ -85,8 +85,8 @@ logging:
   log_to_console: true
   
   tensorboard:
-    enabled: true
-    log_images: true
+    enabled: false
+    log_images: false
     log_frequency: 50  # Log every N batches
   
   # Metrics to track

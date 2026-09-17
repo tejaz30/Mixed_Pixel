@@ -86,12 +86,6 @@ class ThermalImageDataset(torch.utils.data.Dataset):
     """
 ```
 
-**Key Features**:
-- Recursive directory scanning
-- Automatic class label extraction
-- Per-sample metadata preservation
-- Lazy image loading for memory efficiency
-
 ### 2.3 Data Augmentation (`data/transforms.py`)
 
 **Training Transforms**:
