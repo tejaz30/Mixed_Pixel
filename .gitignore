@@ -104,8 +104,7 @@ Thumbs.db
 *local.yaml
 *local.yml
 
-*.md 
-!README.md
+
 
 # Development Files/Folders
 tests

@@ -4,7 +4,8 @@ Done so far:
 
 Repo:
 - Pre processing pipeline for the datasets
-- CAE model and trainign scripts
+- CAE model and training scripts
 
 Local:
-- Pre processing done on three of the four datasets
+- Pre processing done on all four datasets
+- Trained four CAE models to reproduce before correction results
