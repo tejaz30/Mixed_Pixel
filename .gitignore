@@ -122,5 +122,9 @@ datasets
 !CAE_ARCHITECTURE_README.md
 !LDM_FIRST_STAGE_README.md
 
+# Temporary download directory
+temp_kaggle_download/
+
 # Windows batch files (platform-specific, not needed for Kaggle)
 *.bat
+!scripts/sync_kaggle_results.bat
