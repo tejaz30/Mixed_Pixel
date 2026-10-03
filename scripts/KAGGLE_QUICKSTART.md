@@ -9,7 +9,7 @@
 
 ### 2️⃣ Setup Kaggle Notebook
 - [ ] Create new Kaggle notebook
-- [ ] Enable GPU (T4 or P100)
+- [ ] Enable GPU (T4 or **T4 x2 for faster training**)
 - [ ] Add No_Mixed dataset
 - [ ] Upload `notebooks/kaggle_kl_vs_vq_experiment.ipynb`
 
@@ -85,13 +85,15 @@ Update in notebook Cell 1.2.
 
 ## ⏱️ Expected Timeline
 
-| Task | Duration |
-|------|----------|
-| Setup notebook | 5 min |
-| KL training | 1.5-2 hrs |
-| VQ training | 1.5-2 hrs |
-| Evaluation | 10-15 min |
-| Total | ~3-4 hrs |
+| Task | Single GPU (T4) | Dual GPU (T4 x2) |
+|------|-----------------|------------------|
+| Setup notebook | 5 min | 5 min |
+| KL training | 1.5-2 hrs | ~1 hr |
+| VQ training | 1.5-2 hrs | ~1 hr |
+| Evaluation | 10-15 min | 10-15 min |
+| **Total** | **~3-4 hrs** | **~2-2.5 hrs** |
+
+**Note:** Multi-GPU training is automatically enabled when you select "GPU T4 x2" in Kaggle settings!
 
 ---
 

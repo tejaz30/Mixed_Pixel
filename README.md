@@ -28,6 +28,7 @@ A research project investigating deep-learning architectures for unsupervised mi
    ```
 
 2. **Run experiment on Kaggle:**
+   - Enable GPU T4 x2 for faster training (multi-GPU automatically enabled)
    - See [`scripts/KAGGLE_QUICKSTART.md`](scripts/KAGGLE_QUICKSTART.md)
 
 3. **Sync results:**
