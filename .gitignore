@@ -118,6 +118,9 @@ datasets
 !requirements.txt
 
 # Local files
-scripts/
+
 !CAE_ARCHITECTURE_README.md
 !LDM_FIRST_STAGE_README.md
+
+# Windows batch files (platform-specific, not needed for Kaggle)
+*.bat

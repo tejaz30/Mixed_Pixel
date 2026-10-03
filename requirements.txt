@@ -1,29 +1,40 @@
 # Requirements for Mixed Pixels Detection Project
+# Experiment 1: KL vs VQ First-Stage Autoencoders
 
-# Core dependencies
+# Core Scientific Computing
 numpy>=1.24.0
 pandas>=2.0.0
-matplotlib>=3.7.0
-opencv-python>=4.8.0
-Pillow>=10.0.0
-PyYAML>=6.0
 
-# Deep Learning
-torch>=2.0.0
-torchvision>=0.15.0
-tensorboard>=2.13.0
+# Computer Vision & Image Processing
+opencv-python>=4.8.0              # Image loading, preprocessing, transforms
+Pillow>=10.0.0                    # Alternative image I/O
+scikit-image>=0.21.0              # SSIM and advanced image metrics
 
-# Image metrics
-scikit-image>=0.21.0
+# Deep Learning Framework
+torch>=2.0.0                      # PyTorch - core framework
+torchvision>=0.15.0               # Image transforms and utilities
 
 # Visualization
-seaborn>=0.12.0
+matplotlib>=3.7.0                 # Plotting and visualization
+seaborn>=0.12.0                   # Statistical visualizations
 
-# Utilities
-tqdm>=4.65.0
-tabulate>=0.9.0  # For markdown table generation in pandas
+# Configuration & Utilities
+PyYAML>=6.0                       # Configuration file parsing
+tqdm>=4.65.0                      # Progress bars
+tabulate>=0.9.0                   # Table formatting for pandas
 
-# Optional: PDF generation (uncomment if needed)
-# reportlab>=4.0.0
-# markdown>=3.4.0
-# lpips>=0.1.4  # For perceptual loss (optional)
+# Logging & Monitoring
+tensorboard>=2.13.0               # Training visualization (optional)
+
+# Optional Dependencies
+# Uncomment if needed for specific features:
+
+# pytorch-lightning>=2.0.0        # High-level training framework (optional)
+# lpips>=0.1.4                    # Perceptual loss metrics (optional)
+# wandb>=0.15.0                   # Weights & Biases logging (optional)
+
+# Development & Testing
+# pytest>=7.4.0                   # Unit testing framework
+# pytest-cov>=4.1.0               # Test coverage
+# black>=23.0.0                   # Code formatting
+# flake8>=6.0.0                   # Linting
