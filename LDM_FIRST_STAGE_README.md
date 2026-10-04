@@ -711,7 +711,7 @@ def validate(model, val_loader, criterion, device):
 model:
   in_channels: 3
   latent_channels: 4
-  base_channels: 64          # Reduced from 128 for 6GB GPU
+  base_channels: 32          # Reduced to 32 for Kaggle T4 speed
   channel_multipliers: [1, 2, 4, 4]
   num_res_blocks: 2
 
@@ -1028,9 +1028,15 @@ base_channels: 128
 batch_size: 8
 ```
 
-**Reduced (20M params, fits 6GB GPU)**:
+**First Reduction (20M params, fits memory but too slow)**:
 ```yaml
 base_channels: 64
+batch_size: 2
+```
+
+**Final Kaggle-Optimized (5M params, ~6hr for 50 epochs)**:
+```yaml
+base_channels: 32
 batch_size: 2
 ```
 

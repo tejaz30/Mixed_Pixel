@@ -824,7 +824,7 @@ tail -f logs/cae/Chilli_Leaves/train.log
 | Aspect | CAE Baseline | LDM First-Stage (KL/VQ) |
 |--------|--------------|-------------------------|
 | **Architecture** | Simple 3-layer | ResNet-style with 4 levels |
-| **Parameters** | ~50K | ~20M (base_channels=64) |
+| **Parameters** | ~50K | ~5M (base_channels=32) |
 | **Latent channels** | 8 | 4 |
 | **Regularization** | None | KL divergence or VQ |
 | **Loss** | MSE only | MSE + regularization |
