@@ -124,6 +124,7 @@ datasets
 
 # Temporary download directory
 temp_kaggle_download/
+.agents/
 
 # Windows batch files (platform-specific, not needed for Kaggle)
 *.bat

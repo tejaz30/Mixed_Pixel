@@ -1,37 +1,35 @@
-# Configuration for KL-Regularized Autoencoder (Experiment 1)
-# First-stage compression model for LDM
+# Configuration for KL-Regularized Autoencoder - Kaggle 2x T4 GPU Optimized
+# Maximizes utilization of 2x T4 GPUs (32GB total VRAM)
 
 experiment:
-  name: "exp1_kl_no_mixed"
-  description: "KL-regularized first-stage autoencoder for thermal imagery - No_Mixed dataset"
+  name: "exp1_kl_no_mixed_kaggle"
+  description: "KL-regularized first-stage autoencoder - Kaggle 2x T4 optimized"
   type: "first_stage_kl"
   random_seed: 42
 
-# Model architecture
+# Model architecture (same as local)
 model:
   type: "kl_autoencoder"
   in_channels: 3
   latent_channels: 4
-  base_channels: 32  # Reduced to 32 for Kaggle T4 GPU speed (Issue #12)
-  channel_multipliers: [1, 2, 4, 4]  # 3 downsamplings -> 8x compression
+  base_channels: 32
+  channel_multipliers: [1, 2, 4, 4]
   num_res_blocks: 2
-  
-  # KL-specific
-  kl_weight: 1.0e-6  # Following Rombach et al.
+  kl_weight: 1.0e-6
 
-# Data configuration
+# Data configuration - OPTIMIZED FOR 2x GPU
 data:
-  dataset_root: "src/datasets/processed/No_Mixed"
+  dataset_root: "/kaggle/input/no-mixed-thermal"  # Updated by notebook
   load_mode: "rgb"
   
   # Splitting
   train_ratio: 0.8
   val_ratio: 0.2
-  test_ratio: 0.0  # Use validation for testing in this experiment
+  test_ratio: 0.0
   
-  # Data loading
-  batch_size: 4  # Balanced for 6GB GPU
-  num_workers: 4
+  # Data loading - OPTIMIZED
+  batch_size: 16  # 8 per GPU (was 4 on single GPU)
+  num_workers: 8  # More workers for faster data loading
   pin_memory: true
   shuffle: true
   seed: 42
@@ -39,7 +37,7 @@ data:
 # Training configuration
 training:
   max_epochs: 100
-  learning_rate: 1.0e-3  # Adam default from CAE baseline
+  learning_rate: 1.0e-3
   
   # Optimizer
   optimizer: "adam"
@@ -56,18 +54,18 @@ training:
   # Early stopping
   early_stopping:
     enabled: true
-    patience: 5
+    patience: 10  # Increased patience for longer runs
     min_delta: 1.0e-6
     monitor: "val_loss"
   
   # Checkpointing
-  save_frequency: 10  # Save every N epochs
+  save_frequency: 10
   save_best_only: false
 
-# Hardware
+# Hardware - MULTI-GPU ENABLED
 hardware:
-  device: "auto"  # auto, cuda, or cpu
-  mixed_precision: false
+  device: "auto"
+  mixed_precision: true  # ENABLED for 2x speedup on T4
 
 # Paths
 paths:
@@ -85,9 +83,8 @@ logging:
   tensorboard:
     enabled: false
     log_images: false
-    log_frequency: 50  # Log every N batches
+    log_frequency: 50
   
-  # Metrics to track
   metrics:
     - "loss"
     - "reconstruction_loss"
@@ -98,17 +95,14 @@ logging:
 
 # Evaluation
 evaluation:
-  # Standard metrics
   compute_ssim: true
-  compute_lpips: false  # Optional, requires lpips package
+  compute_lpips: false
   
-  # Boundary-focused metrics
   boundary_metrics:
     enabled: true
-    threshold_percentile: 75.0  # High-gradient region threshold
+    threshold_percentile: 75.0
     gradient_method: "sobel"
   
-  # Visualization
   num_vis_samples: 16
   save_reconstructions: true
   save_error_maps: true
