@@ -23,7 +23,7 @@ model:
 
 # Data configuration
 data:
-  dataset_root: "src/datasets/processed/No_Mixed"
+  dataset_root: "src/datasets/processed/No_Mixed/No_mixed"  # Actual image directory
   load_mode: "rgb"
   
   # Splitting
