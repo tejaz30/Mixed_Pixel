@@ -19,7 +19,7 @@ model:
 
 # Data configuration - OPTIMIZED FOR 2x GPU
 data:
-  dataset_root: "/kaggle/input/no-mixed-thermal"  # Updated by notebook
+  dataset_root: "/kaggle/input/datasets/tejabulusu/no-mixed/No_mixed"  # Updated by notebook
   load_mode: "rgb"
   
   # Splitting
