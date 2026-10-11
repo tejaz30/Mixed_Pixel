@@ -98,68 +98,99 @@ class ThermalImageDataset(Dataset):
         """
         Recursively discover all images and their labels.
         
-        Expected structure:
-        root_dir/
-            Dataset1/
-                ClassA/
-                    image1.jpg
-                    image2.jpg
-                ClassB/
-                    image3.jpg
-            Dataset2/
-                ClassC/
-                    image4.jpg
+        Supports two directory structures:
+        
+        1. Nested structure (with subdirectories):
+           root_dir/
+               Dataset1/
+                   ClassA/
+                       image1.jpg
+                   ClassB/
+                       image2.jpg
+        
+        2. Flat structure (images directly in root):
+           root_dir/
+               image1.jpg
+               image2.jpg
         
         Labels are extracted from the immediate parent directory.
+        For flat structures, all images get the root directory name as the class.
         """
-        # Get dataset directories
-        if self.datasets is None:
-            # Use all subdirectories
-            dataset_dirs = [d for d in self.root_dir.iterdir() if d.is_dir()]
+        # Check if this is a flat directory (images directly in root)
+        images_in_root = []
+        for ext in self.image_extensions:
+            images_in_root.extend(list(self.root_dir.glob(f"*{ext}")))
+        
+        if images_in_root:
+            # Flat structure: all images directly in root_dir
+            logger.info(f"Detected flat directory structure with {len(images_in_root)} images in root")
+            dataset_name = self.root_dir.name
+            class_name = self.root_dir.name  # Use directory name as class
+            
+            for img_path in images_in_root:
+                self.samples.append({
+                    'path': img_path,
+                    'class': class_name,
+                    'dataset': dataset_name
+                })
+            
+            if class_name not in self.classes:
+                self.classes.append(class_name)
+            
+            logger.info(f"Flat structure: {dataset_name}/{class_name}: {len(images_in_root)} images")
+        
         else:
-            # Use specified datasets
-            dataset_dirs = [self.root_dir / ds for ds in self.datasets]
-        
-        # Track statistics per dataset
-        dataset_stats = defaultdict(lambda: defaultdict(int))
-        
-        for dataset_dir in dataset_dirs:
-            if not dataset_dir.exists():
-                logger.warning(f"Dataset directory not found: {dataset_dir}")
-                continue
+            # Nested structure: process subdirectories
+            logger.info(f"Detected nested directory structure")
             
-            dataset_name = dataset_dir.name
-            logger.info(f"Scanning dataset: {dataset_name}")
+            # Get dataset directories
+            if self.datasets is None:
+                # Use all subdirectories
+                dataset_dirs = [d for d in self.root_dir.iterdir() if d.is_dir()]
+            else:
+                # Use specified datasets
+                dataset_dirs = [self.root_dir / ds for ds in self.datasets]
             
-            # Find all images recursively
-            for ext in self.image_extensions:
-                for img_path in dataset_dir.rglob(f"*{ext}"):
-                    # Extract class name from parent directory
-                    class_name = img_path.parent.name
-                    
-                    # Store sample
-                    self.samples.append({
-                        'path': img_path,
-                        'class': class_name,
-                        'dataset': dataset_name
-                    })
-                    
-                    # Track unique classes
-                    if class_name not in self.classes:
-                        self.classes.append(class_name)
-                    
-                    # Update statistics
-                    dataset_stats[dataset_name][class_name] += 1
+            # Track statistics per dataset
+            dataset_stats = defaultdict(lambda: defaultdict(int))
+            
+            for dataset_dir in dataset_dirs:
+                if not dataset_dir.exists():
+                    logger.warning(f"Dataset directory not found: {dataset_dir}")
+                    continue
+                
+                dataset_name = dataset_dir.name
+                logger.info(f"Scanning dataset: {dataset_name}")
+                
+                # Find all images recursively
+                for ext in self.image_extensions:
+                    for img_path in dataset_dir.rglob(f"*{ext}"):
+                        # Extract class name from parent directory
+                        class_name = img_path.parent.name
+                        
+                        # Store sample
+                        self.samples.append({
+                            'path': img_path,
+                            'class': class_name,
+                            'dataset': dataset_name
+                        })
+                        
+                        # Track unique classes
+                        if class_name not in self.classes:
+                            self.classes.append(class_name)
+                        
+                        # Update statistics
+                        dataset_stats[dataset_name][class_name] += 1
+            
+            # Log statistics
+            logger.info(f"Dataset discovery complete:")
+            for dataset_name, class_counts in dataset_stats.items():
+                logger.info(f"  {dataset_name}:")
+                for class_name, count in sorted(class_counts.items()):
+                    logger.info(f"    {class_name}: {count} images")
         
         # Sort classes for consistency
         self.classes.sort()
-        
-        # Log statistics
-        logger.info(f"Dataset discovery complete:")
-        for dataset_name, class_counts in dataset_stats.items():
-            logger.info(f"  {dataset_name}:")
-            for class_name, count in sorted(class_counts.items()):
-                logger.info(f"    {class_name}: {count} images")
     
     def _generate_class_mapping(self):
         """Generate class name to index mapping."""
