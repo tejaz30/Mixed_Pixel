@@ -32,8 +32,8 @@ data:
   test_ratio: 0.0
   
   # Data loading - OPTIMIZED
-  batch_size: 16  # 8 per GPU (was 4 on single GPU)
-  num_workers: 8  # More workers for faster data loading
+  batch_size: 8  # 4 per GPU (reduced from 16 due to T4 memory constraints)
+  num_workers: 4  # Reduced from 8 (Kaggle warning: max 4 workers recommended)
   pin_memory: true
   shuffle: true
   seed: 42
