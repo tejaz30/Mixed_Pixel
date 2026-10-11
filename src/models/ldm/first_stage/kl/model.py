@@ -202,7 +202,10 @@ class KLAutoencoder(nn.Module):
             sample: If True, sample from posterior. If False, use mean (deterministic).
         
         Returns:
-            Tuple of (reconstruction, posterior_distribution)
+            Tuple of (reconstruction, mean, logvar) where:
+            - reconstruction: Reconstructed image
+            - mean: Posterior mean (for KL loss)
+            - logvar: Posterior log variance (for KL loss)
         """
         # Encode to posterior distribution
         posterior = self.encode(x)
@@ -216,7 +219,8 @@ class KLAutoencoder(nn.Module):
         # Decode
         reconstruction = self.decode(z)
         
-        return reconstruction, posterior
+        # Return tensors only (DataParallel compatible)
+        return reconstruction, posterior.mean, posterior.logvar
     
     def get_latent_shape(self) -> Tuple[int, int, int]:
         """

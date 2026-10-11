@@ -281,8 +281,8 @@ class Trainer:
                     isinstance(self.model, torch.nn.DataParallel) and 
                     isinstance(self.model.module, KLAutoencoder)
                 ):
-                    reconstruction, posterior = self.model(images, sample=True)
-                    losses = self.criterion(reconstruction, images, posterior)
+                    reconstruction, mean, logvar = self.model(images, sample=True)
+                    losses = self.criterion(reconstruction, images, mean, logvar)
                 else:  # VQ
                     reconstruction, vq_outputs = self.model(images)
                     losses = self.criterion(reconstruction, images, vq_outputs)
@@ -341,8 +341,8 @@ class Trainer:
                         isinstance(self.model, torch.nn.DataParallel) and 
                         isinstance(self.model.module, KLAutoencoder)
                     ):
-                        reconstruction, posterior = self.model(images, sample=False)
-                        losses = self.criterion(reconstruction, images, posterior)
+                        reconstruction, mean, logvar = self.model(images, sample=False)
+                        losses = self.criterion(reconstruction, images, mean, logvar)
                     else:  # VQ
                         reconstruction, vq_outputs = self.model(images)
                         losses = self.criterion(reconstruction, images, vq_outputs)
