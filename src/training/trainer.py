@@ -291,11 +291,20 @@ class Trainer:
             self.optimizer.zero_grad()
             if self.use_amp:
                 self.scaler.scale(losses['total']).backward()
+                # Gradient clipping to prevent explosion
+                self.scaler.unscale_(self.optimizer)
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
                 self.scaler.step(self.optimizer)
                 self.scaler.update()
             else:
                 losses['total'].backward()
+                # Gradient clipping to prevent explosion
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
                 self.optimizer.step()
+            
+            # Check for NaN
+            if torch.isnan(losses['total']):
+                raise ValueError(f"NaN loss detected at epoch {self.current_epoch}, batch {batch_idx}")
             
             # Accumulate losses
             for key, value in losses.items():
@@ -476,8 +485,10 @@ class Trainer:
         print("="*70)
         
         return {
-            'final_val_loss': self.best_val_loss,
+            'best_val_loss': self.best_val_loss,
+            'final_val_loss': self.best_val_loss,  # Alias for compatibility
             'best_epoch': self.best_epoch,
             'total_time': total_time,
-            'num_epochs_trained': self.current_epoch
+            'epochs_completed': self.current_epoch,
+            'num_epochs_trained': self.current_epoch  # Alias for compatibility
         }
