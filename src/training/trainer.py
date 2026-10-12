@@ -371,8 +371,10 @@ class Trainer:
     
     def save_checkpoint(self, epoch: int, train_losses: dict, val_losses: dict) -> None:
         """Save training checkpoint."""
-        checkpoint_path = Path(self.config['paths']['checkpoint_dir']) / \
-                         f'checkpoint_epoch_{epoch}.pth'
+        checkpoint_dir = Path(self.config['paths']['checkpoint_dir'])
+        checkpoint_dir.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
+        
+        checkpoint_path = checkpoint_dir / f'checkpoint_epoch_{epoch}.pth'
         
         # Handle DataParallel
         model_state = self.model.module.state_dict() if \
@@ -388,11 +390,14 @@ class Trainer:
             'config': self.config
         }, checkpoint_path)
         
-        print(f"  → Checkpoint saved")
+        print(f"  → Checkpoint saved to {checkpoint_path}")
     
     def save_best_model(self, epoch: int, val_loss: float) -> None:
         """Save best model."""
-        best_path = Path(self.config['paths']['checkpoint_dir']) / 'best_model.pth'
+        checkpoint_dir = Path(self.config['paths']['checkpoint_dir'])
+        checkpoint_dir.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
+        
+        best_path = checkpoint_dir / 'best_model.pth'
         
         # Handle DataParallel
         model_state = self.model.module.state_dict() if \
@@ -406,7 +411,7 @@ class Trainer:
             'config': self.config
         }, best_path)
         
-        print(f"  ★ BEST model saved (val_loss: {val_loss:.6f})")
+        print(f"  ★ BEST model saved to {best_path} (val_loss: {val_loss:.6f})")
     
     def load_checkpoint(self, checkpoint_path: Path) -> None:
         """Load training checkpoint and resume."""
