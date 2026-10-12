@@ -408,6 +408,24 @@ class Trainer:
         
         print(f"  ★ BEST model saved (val_loss: {val_loss:.6f})")
     
+    def load_checkpoint(self, checkpoint_path: Path) -> None:
+        """Load training checkpoint and resume."""
+        checkpoint = torch.load(checkpoint_path, map_location=self.device)
+        
+        # Load model state
+        if isinstance(self.model, torch.nn.DataParallel):
+            self.model.module.load_state_dict(checkpoint['model_state_dict'])
+        else:
+            self.model.load_state_dict(checkpoint['model_state_dict'])
+        
+        # Load optimizer state
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        
+        # Load training state
+        self.current_epoch = checkpoint['epoch']
+        self.best_val_loss = checkpoint.get('best_val_loss', self.best_val_loss)
+        self.best_epoch = checkpoint.get('best_epoch', self.best_epoch)
+    
     def train(self) -> Dict:
         """
         Run full training loop.

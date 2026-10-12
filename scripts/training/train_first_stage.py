@@ -30,6 +30,7 @@ def main():
     parser.add_argument('--max-epochs', type=int, help='Override max epochs')
     parser.add_argument('--device', type=str, help='Override device (auto/cuda/cpu)')
     parser.add_argument('--batch-size', type=int, help='Override batch size')
+    parser.add_argument('--resume', type=Path, help='Resume from checkpoint file')
     args = parser.parse_args()
     
     # Validate config exists
@@ -85,6 +86,20 @@ def main():
     print(f"  Dataset: {config['data']['dataset_root']}")
     print(f"  Train samples: {len(trainer.train_loader.dataset)}")
     print(f"  Val samples: {len(trainer.val_loader.dataset)}")
+    
+    # Resume from checkpoint if specified
+    if args.resume:
+        if not args.resume.exists():
+            print(f"\nError: Checkpoint not found: {args.resume}")
+            return 1
+        print(f"\n{'='*70}")
+        print(f"RESUMING FROM CHECKPOINT")
+        print(f"{'='*70}")
+        print(f"Checkpoint: {args.resume}")
+        trainer.load_checkpoint(args.resume)
+        print(f"Resumed from epoch {trainer.current_epoch}")
+        print(f"Best val loss so far: {trainer.best_val_loss:.6f}")
+    
     print("\n" + "="*70)
     print("Starting training...")
     print("="*70)
