@@ -56,9 +56,15 @@ class KLAutoencoderLoss(nn.Module):
         reconstruction_loss = F.mse_loss(reconstruction, target, reduction='mean')
         
         # KL divergence to standard normal prior
-        # KL(N(mu, sigma) || N(0, 1)) = -0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
-        kl_loss = -0.5 * torch.sum(1 + logvar - mean.pow(2) - logvar.exp())
-        kl_loss = kl_loss / mean.shape[0]  # Average over batch
+        # Following Stable Diffusion implementation:
+        # Sum over spatial dimensions [1,2,3] (channels, height, width)
+        # but NOT batch dimension [0], then average over batch
+        # Formula: KL(N(mu, sigma) || N(0, 1)) = -0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
+        kl_per_sample = -0.5 * torch.sum(
+            1 + logvar - mean.pow(2) - logvar.exp(),
+            dim=[1, 2, 3]  # Sum over channels, height, width only
+        )
+        kl_loss = torch.mean(kl_per_sample)  # Average over batch
         
         # Total loss
         total_loss = reconstruction_loss + self.kl_weight * kl_loss

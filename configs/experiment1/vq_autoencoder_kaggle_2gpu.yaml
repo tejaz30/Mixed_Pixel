@@ -41,7 +41,7 @@ data:
 # Training configuration
 training:
   max_epochs: 100
-  learning_rate: 1.0e-3
+  learning_rate: 5.0e-4  # Reduced from 1e-3 to prevent NaN/explosion
   
   # Optimizer
   optimizer: "adam"
