@@ -50,7 +50,7 @@ training:
   
   # Learning rate schedule
   lr_scheduler:
-    enabled: false
+    enabled: true  # ENABLED to prevent late-stage NaN
     type: "reduce_on_plateau"
     patience: 5
     factor: 0.5
