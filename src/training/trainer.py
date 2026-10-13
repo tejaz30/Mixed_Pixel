@@ -111,6 +111,9 @@ class Trainer:
         self.best_val_loss = float('inf')
         self.best_epoch = 0
         self.current_epoch = 0
+        
+        # Gradient clipping
+        self.clip_grad_norm = self.config['training'].get('clip_grad_norm', 1.0)
     
     def _setup_reproducibility(self) -> None:
         """Setup random seeds."""
@@ -194,7 +197,8 @@ class Trainer:
             self.model.parameters(),
             lr=self.config['training']['learning_rate'],
             betas=self.config['training']['betas'],
-            weight_decay=self.config['training']['weight_decay']
+            weight_decay=self.config['training']['weight_decay'],
+            eps=self.config['training'].get('eps', 1e-8)
         )
     
     def _create_dataloaders(self) -> Tuple[DataLoader, DataLoader]:
@@ -318,13 +322,13 @@ class Trainer:
                 self.scaler.scale(losses['total']).backward()
                 # Gradient clipping to prevent explosion
                 self.scaler.unscale_(self.optimizer)
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=self.clip_grad_norm)
                 self.scaler.step(self.optimizer)
                 self.scaler.update()
             else:
                 losses['total'].backward()
                 # Gradient clipping to prevent explosion
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=self.clip_grad_norm)
                 self.optimizer.step()
             
             # Check for NaN
@@ -477,6 +481,11 @@ class Trainer:
         print(f"Epochs: {self.config['training']['max_epochs']}")
         print(f"Batch size: {self.config['data']['batch_size']}")
         print(f"Batches per epoch: {len(self.train_loader)}")
+        print(f"Learning rate: {self.config['training']['learning_rate']:.6e}")
+        print(f"Gradient clipping: {self.clip_grad_norm}")
+        print(f"Optimizer eps: {self.optimizer.param_groups[0]['eps']:.6e}")
+        if self.scheduler:
+            print(f"LR Scheduler: enabled (patience={self.config['training']['lr_scheduler']['patience']})")
         print("="*70)
         
         start_time = time.time()
