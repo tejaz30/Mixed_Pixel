@@ -71,7 +71,10 @@ def main():
         print("\n🔍 DIAGNOSTIC MODE ENABLED")
         print("Detailed logging of logvar, gradients, and losses every 50 batches")
         print("="*70)
-        from investigation.diagnose_nan import add_diagnostics_to_trainer
+        # Import from scripts.investigation
+        investigation_path = repo_root / 'scripts' / 'investigation'
+        sys.path.insert(0, str(investigation_path))
+        from diagnose_nan import add_diagnostics_to_trainer
         add_diagnostics_to_trainer()
     
     # Create trainer
