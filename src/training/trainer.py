@@ -276,8 +276,7 @@ class Trainer:
                 self.optimizer,
                 mode='min',
                 factor=lr_scheduler_config.get('factor', 0.5),
-                patience=lr_scheduler_config.get('patience', 5),
-                verbose=True  # Prints "Reducing learning rate..."
+                patience=lr_scheduler_config.get('patience', 5)
             )
             print(f"✨ Learning rate scheduler ENABLED: ReduceLROnPlateau")
             print(f"   Patience: {lr_scheduler_config.get('patience', 5)} epochs")
@@ -526,7 +525,11 @@ class Trainer:
                 
                 # Learning rate scheduling
                 if self.scheduler is not None:
+                    old_lr = self.optimizer.param_groups[0]['lr']
                     self.scheduler.step(val_losses['total'])
+                    new_lr = self.optimizer.param_groups[0]['lr']
+                    if new_lr != old_lr:
+                        print(f"📉 Reducing learning rate: {old_lr:.6e} → {new_lr:.6e}")
         
         except Exception as e:
             self.diagnostics.log(f"❌ Training failed: {type(e).__name__}: {str(e)}")
