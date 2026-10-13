@@ -93,6 +93,7 @@ class Trainer:
         self.optimizer = self._create_optimizer()
         self.train_loader, self.val_loader = self._create_dataloaders()
         self.early_stopping = self._create_early_stopping()
+        self.scheduler = self._create_scheduler()
         
         # Mixed precision training
         self.use_amp = self.config['hardware'].get('mixed_precision', False) and torch.cuda.is_available()
@@ -261,6 +262,31 @@ class Trainer:
             )
         return None
     
+    def _create_scheduler(self) -> Optional[torch.optim.lr_scheduler._LRScheduler]:
+        """Create learning rate scheduler."""
+        lr_scheduler_config = self.config['training'].get('lr_scheduler', {})
+        
+        if not lr_scheduler_config.get('enabled', False):
+            return None
+        
+        scheduler_type = lr_scheduler_config.get('type', 'reduce_on_plateau').lower()
+        
+        if scheduler_type == 'reduce_on_plateau':
+            scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(
+                self.optimizer,
+                mode='min',
+                factor=lr_scheduler_config.get('factor', 0.5),
+                patience=lr_scheduler_config.get('patience', 5),
+                verbose=True  # Prints "Reducing learning rate..."
+            )
+            print(f"✨ Learning rate scheduler ENABLED: ReduceLROnPlateau")
+            print(f"   Patience: {lr_scheduler_config.get('patience', 5)} epochs")
+            print(f"   Factor: {lr_scheduler_config.get('factor', 0.5)}")
+            return scheduler
+        else:
+            print(f"⚠️  Unknown scheduler type: {scheduler_type}, skipping")
+            return None
+    
     def train_epoch(self) -> Dict[str, float]:
         """Train for one epoch."""
         self.model.train()
@@ -385,6 +411,7 @@ class Trainer:
             'epoch': epoch,
             'model_state_dict': model_state,
             'optimizer_state_dict': self.optimizer.state_dict(),
+            'scheduler_state_dict': self.scheduler.state_dict() if self.scheduler else None,
             'train_losses': train_losses,
             'val_losses': val_losses,
             'config': self.config
@@ -407,6 +434,7 @@ class Trainer:
         torch.save({
             'epoch': epoch,
             'model_state_dict': model_state,
+            'scheduler_state_dict': self.scheduler.state_dict() if self.scheduler else None,
             'val_loss': val_loss,
             'config': self.config
         }, best_path)
@@ -425,6 +453,10 @@ class Trainer:
         
         # Load optimizer state
         self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        
+        # Load scheduler state
+        if self.scheduler and 'scheduler_state_dict' in checkpoint and checkpoint['scheduler_state_dict']:
+            self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
         
         # Load training state
         self.current_epoch = checkpoint['epoch']
@@ -491,6 +523,10 @@ class Trainer:
                 if self.early_stopping and self.early_stopping(val_losses['total']):
                     print(f"\nEarly stopping at epoch {self.current_epoch}")
                     break
+                
+                # Learning rate scheduling
+                if self.scheduler is not None:
+                    self.scheduler.step(val_losses['total'])
         
         except Exception as e:
             self.diagnostics.log(f"❌ Training failed: {type(e).__name__}: {str(e)}")
