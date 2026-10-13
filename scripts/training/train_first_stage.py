@@ -31,6 +31,7 @@ def main():
     parser.add_argument('--device', type=str, help='Override device (auto/cuda/cpu)')
     parser.add_argument('--batch-size', type=int, help='Override batch size')
     parser.add_argument('--resume', type=Path, help='Resume from checkpoint file')
+    parser.add_argument('--diagnose', action='store_true', help='Enable detailed NaN diagnostics')
     args = parser.parse_args()
     
     # Validate config exists
@@ -64,6 +65,14 @@ def main():
     model_type = args.model_type or config['model']['type']
     print(f"Model type: {model_type}")
     print("="*70)
+    
+    # Enable diagnostics if requested
+    if args.diagnose:
+        print("\n🔍 DIAGNOSTIC MODE ENABLED")
+        print("Detailed logging of logvar, gradients, and losses every 50 batches")
+        print("="*70)
+        from investigation.diagnose_nan import add_diagnostics_to_trainer
+        add_diagnostics_to_trainer()
     
     # Create trainer
     print("\nInitializing trainer...")
