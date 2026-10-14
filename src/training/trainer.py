@@ -594,14 +594,48 @@ class Trainer:
         """Setup Kaggle dataset for persistent checkpoint storage."""
         import os
         
-        # Get Kaggle username from environment
-        self._kaggle_username = os.environ.get('KAGGLE_USERNAME', 'unknown')
+        # Get Kaggle username - try multiple methods
+        self._kaggle_username = None
+        
+        # Method 1: Environment variable
+        self._kaggle_username = os.environ.get('KAGGLE_USERNAME')
+        
+        # Method 2: Parse from kaggle.json if available
+        if not self._kaggle_username:
+            try:
+                kaggle_json = Path.home() / '.kaggle' / 'kaggle.json'
+                if kaggle_json.exists():
+                    with open(kaggle_json) as f:
+                        data = json.load(f)
+                        self._kaggle_username = data.get('username')
+            except:
+                pass
+        
+        # Method 3: Try to get from kaggle API
+        if not self._kaggle_username:
+            try:
+                import subprocess
+                result = subprocess.run('kaggle config view', shell=True, capture_output=True, text=True)
+                for line in result.stdout.split('\n'):
+                    if 'username' in line.lower():
+                        self._kaggle_username = line.split(':')[-1].strip()
+                        break
+            except:
+                pass
+        
+        # Fallback to 'unknown' if still not found
+        if not self._kaggle_username:
+            self._kaggle_username = 'unknown'
+            print(f"\n⚠️  WARNING: Could not detect Kaggle username!")
+            print(f"   Dataset uploads will use 'unknown' as username")
+            print(f"   This may cause upload failures")
         
         # Create dataset name based on model type
         model_type = self.config['model']['type'].replace('_', '-')
-        self._kaggle_dataset_name = f"{self._kaggle_username}/mixed-pixels-{model_type}-checkpoints"
+        self._kaggle_dataset_name = f"{self._kaggle_username}/{model_type}-checkpoints"
         
         print(f"\n📦 Kaggle Dataset Persistence ENABLED")
+        print(f"   Username: {self._kaggle_username}")
         print(f"   Dataset: {self._kaggle_dataset_name}")
         print(f"   Checkpoints will be saved to Kaggle Dataset (survives session restarts)")
     
@@ -641,21 +675,28 @@ class Trainer:
             if result.returncode == 0:
                 # Dataset exists - create new version
                 create_cmd = f"kaggle datasets version -p {dataset_dir} -m 'Checkpoint: {checkpoint_name}' --delete-old-versions"
-                subprocess.run(create_cmd, shell=True, check=False, capture_output=True)
-                print(f"    📤 Uploaded to Kaggle Dataset (updated)")
+                result = subprocess.run(create_cmd, shell=True, capture_output=True, text=True)
+                if result.returncode == 0:
+                    print(f"    📤 Uploaded to Kaggle Dataset (updated)")
+                else:
+                    print(f"    ⚠️  Upload failed: {result.stderr}")
             else:
                 # Dataset doesn't exist - create it
                 create_cmd = f"kaggle datasets create -p {dataset_dir}"
-                result = subprocess.run(create_cmd, shell=True, check=False, capture_output=True, text=True)
+                result = subprocess.run(create_cmd, shell=True, capture_output=True, text=True)
                 if result.returncode == 0:
                     print(f"    📤 Created Kaggle Dataset: {self._kaggle_dataset_name}")
                 else:
-                    print(f"    ⚠️  Dataset upload failed (training continues)")
+                    print(f"    ⚠️  Dataset creation failed: {result.stderr}")
+                    print(f"    ⚠️  Username detected as: {self._kaggle_username}")
+                    print(f"    ⚠️  Checkpoints saved locally at: {checkpoint_path}")
             
             # Cleanup
             shutil.rmtree(dataset_dir, ignore_errors=True)
             
         except Exception as e:
             # Don't break training if upload fails
-            print(f"    ⚠️  Checkpoint upload failed: {e} (training continues)")
+            print(f"    ⚠️  Checkpoint upload exception: {e}")
+            import traceback
+            traceback.print_exc()
             pass
