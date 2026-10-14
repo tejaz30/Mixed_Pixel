@@ -11,6 +11,9 @@ if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
 import time
+import os
+import json
+import shutil
 import torch
 import torch.optim as optim
 from torch.utils.data import DataLoader
@@ -114,6 +117,13 @@ class Trainer:
         
         # Gradient clipping
         self.clip_grad_norm = self.config['training'].get('clip_grad_norm', 1.0)
+        
+        # Kaggle dataset persistence
+        self._kaggle_dataset_name = None
+        self._kaggle_username = None
+        self._is_kaggle = Path('/kaggle/working').exists()
+        if self._is_kaggle:
+            self._setup_kaggle_dataset()
     
     def _setup_reproducibility(self) -> None:
         """Setup random seeds."""
@@ -401,7 +411,7 @@ class Trainer:
     def save_checkpoint(self, epoch: int, train_losses: dict, val_losses: dict) -> None:
         """Save training checkpoint."""
         checkpoint_dir = Path(self.config['paths']['checkpoint_dir'])
-        checkpoint_dir.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
+        checkpoint_dir.mkdir(parents=True, exist_ok=True)
         
         checkpoint_path = checkpoint_dir / f'checkpoint_epoch_{epoch}.pth'
         
@@ -417,15 +427,21 @@ class Trainer:
             'scheduler_state_dict': self.scheduler.state_dict() if self.scheduler else None,
             'train_losses': train_losses,
             'val_losses': val_losses,
+            'best_val_loss': self.best_val_loss,
+            'best_epoch': self.best_epoch,
             'config': self.config
         }, checkpoint_path)
         
         print(f"  → Checkpoint saved to {checkpoint_path}")
+        
+        # Upload to Kaggle Dataset (persists forever)
+        if self._is_kaggle:
+            self._upload_checkpoint_to_kaggle_dataset(checkpoint_path)
     
     def save_best_model(self, epoch: int, val_loss: float) -> None:
         """Save best model."""
         checkpoint_dir = Path(self.config['paths']['checkpoint_dir'])
-        checkpoint_dir.mkdir(parents=True, exist_ok=True)  # Ensure directory exists
+        checkpoint_dir.mkdir(parents=True, exist_ok=True)
         
         best_path = checkpoint_dir / 'best_model.pth'
         
@@ -439,10 +455,16 @@ class Trainer:
             'model_state_dict': model_state,
             'scheduler_state_dict': self.scheduler.state_dict() if self.scheduler else None,
             'val_loss': val_loss,
+            'best_val_loss': val_loss,
+            'best_epoch': epoch,
             'config': self.config
         }, best_path)
         
         print(f"  ★ BEST model saved to {best_path} (val_loss: {val_loss:.6f})")
+        
+        # Upload to Kaggle Dataset
+        if self._is_kaggle:
+            self._upload_checkpoint_to_kaggle_dataset(best_path)
     
     def load_checkpoint(self, checkpoint_path: Path) -> None:
         """Load training checkpoint and resume."""
@@ -491,7 +513,11 @@ class Trainer:
         start_time = time.time()
         
         try:
-            for epoch in range(self.config['training']['max_epochs']):
+            # Determine start epoch (resume or fresh start)
+            start_epoch = self.current_epoch if self.current_epoch > 0 else 0
+            max_epochs = self.config['training']['max_epochs']
+            
+            for epoch in range(start_epoch, max_epochs):
                 self.current_epoch = epoch + 1
                 epoch_start = time.time()
                 
@@ -563,3 +589,73 @@ class Trainer:
             'epochs_completed': self.current_epoch,
             'num_epochs_trained': self.current_epoch  # Alias for compatibility
         }
+    
+    def _setup_kaggle_dataset(self) -> None:
+        """Setup Kaggle dataset for persistent checkpoint storage."""
+        import os
+        
+        # Get Kaggle username from environment
+        self._kaggle_username = os.environ.get('KAGGLE_USERNAME', 'unknown')
+        
+        # Create dataset name based on model type
+        model_type = self.config['model']['type'].replace('_', '-')
+        self._kaggle_dataset_name = f"{self._kaggle_username}/mixed-pixels-{model_type}-checkpoints"
+        
+        print(f"\n📦 Kaggle Dataset Persistence ENABLED")
+        print(f"   Dataset: {self._kaggle_dataset_name}")
+        print(f"   Checkpoints will be saved to Kaggle Dataset (survives session restarts)")
+    
+    def _upload_checkpoint_to_kaggle_dataset(self, checkpoint_path: Path) -> None:
+        """
+        Upload checkpoint to Kaggle Dataset.
+        This persists checkpoints even if the session crashes.
+        """
+        try:
+            import subprocess
+            
+            checkpoint_name = checkpoint_path.name
+            
+            # Create temporary dataset directory
+            dataset_dir = Path('/kaggle/temp_dataset')
+            if dataset_dir.exists():
+                shutil.rmtree(dataset_dir)
+            dataset_dir.mkdir()
+            
+            # Copy checkpoint to dataset directory
+            shutil.copy(checkpoint_path, dataset_dir / checkpoint_name)
+            
+            # Create dataset metadata
+            metadata = {
+                "title": f"Mixed Pixels {self.config['model']['type'].upper()} Checkpoints",
+                "id": self._kaggle_dataset_name,
+                "licenses": [{"name": "CC0-1.0"}]
+            }
+            
+            with open(dataset_dir / "dataset-metadata.json", "w") as f:
+                json.dump(metadata, f)
+            
+            # Check if dataset exists
+            check_cmd = f"kaggle datasets status {self._kaggle_dataset_name}"
+            result = subprocess.run(check_cmd, shell=True, capture_output=True, text=True)
+            
+            if result.returncode == 0:
+                # Dataset exists - create new version
+                create_cmd = f"kaggle datasets version -p {dataset_dir} -m 'Checkpoint: {checkpoint_name}' --delete-old-versions"
+                subprocess.run(create_cmd, shell=True, check=False, capture_output=True)
+                print(f"    📤 Uploaded to Kaggle Dataset (updated)")
+            else:
+                # Dataset doesn't exist - create it
+                create_cmd = f"kaggle datasets create -p {dataset_dir}"
+                result = subprocess.run(create_cmd, shell=True, check=False, capture_output=True, text=True)
+                if result.returncode == 0:
+                    print(f"    📤 Created Kaggle Dataset: {self._kaggle_dataset_name}")
+                else:
+                    print(f"    ⚠️  Dataset upload failed (training continues)")
+            
+            # Cleanup
+            shutil.rmtree(dataset_dir, ignore_errors=True)
+            
+        except Exception as e:
+            # Don't break training if upload fails
+            print(f"    ⚠️  Checkpoint upload failed: {e} (training continues)")
+            pass
