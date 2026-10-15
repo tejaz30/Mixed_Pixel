@@ -115,38 +115,51 @@ def main():
         
         kaggle_username = os.environ.get('KAGGLE_USERNAME', 'unknown')
         model_type = config['model']['type'].replace('_', '-')
-        dataset_name = f"{kaggle_username}/mixed-pixels-{model_type}-checkpoints"
         
-        print(f"Dataset: {dataset_name}")
+        # Try multiple dataset name formats
+        dataset_names = [
+            f"{kaggle_username}/{model_type}-checkpoints",  # With username
+            f"{model_type}-checkpoints",  # Without username (Kaggle's default)
+        ]
+        
+        print(f"Will try these dataset names:")
+        for name in dataset_names:
+            print(f"  - {name}")
         
         # Try to download dataset
-        try:
-            download_dir = Path('/kaggle/temp_download')
-            download_dir.mkdir(exist_ok=True)
-            
-            cmd = f"kaggle datasets download -d {dataset_name} -p {download_dir} --unzip"
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-            
-            if result.returncode == 0:
-                # Dataset downloaded - copy checkpoints to checkpoint dir
-                checkpoint_dir.mkdir(parents=True, exist_ok=True)
+        downloaded = False
+        for dataset_name in dataset_names:
+            try:
+                print(f"\nTrying: {dataset_name}")
+                download_dir = Path('/kaggle/temp_download')
+                download_dir.mkdir(exist_ok=True)
                 
-                downloaded_checkpoints = list(download_dir.glob('*.pth'))
-                if downloaded_checkpoints:
-                    for ckpt in downloaded_checkpoints:
-                        dest = checkpoint_dir / ckpt.name
-                        shutil.copy(ckpt, dest)
-                        print(f"  ✓ Downloaded: {ckpt.name}")
+                cmd = f"kaggle datasets download -d {dataset_name} -p {download_dir} --unzip"
+                result = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+                
+                if result.returncode == 0:
+                    # Dataset downloaded - copy checkpoints to checkpoint dir
+                    checkpoint_dir.mkdir(parents=True, exist_ok=True)
                     
-                    # Clean up download dir
-                    shutil.rmtree(download_dir, ignore_errors=True)
-                else:
-                    print(f"  ⚠️  Dataset exists but no checkpoints found")
-            else:
-                print(f"  ℹ️  No existing dataset found (starting fresh)")
-        except Exception as e:
-            print(f"  ⚠️  Could not download dataset: {e}")
-            print(f"  ℹ️  Starting fresh training")
+                    downloaded_checkpoints = list(download_dir.glob('*.pth'))
+                    if downloaded_checkpoints:
+                        for ckpt in downloaded_checkpoints:
+                            dest = checkpoint_dir / ckpt.name
+                            shutil.copy(ckpt, dest)
+                            print(f"  ✓ Downloaded: {ckpt.name}")
+                        
+                        downloaded = True
+                        # Clean up download dir
+                        shutil.rmtree(download_dir, ignore_errors=True)
+                        break
+                    else:
+                        print(f"  ⚠️  Dataset exists but no checkpoints found")
+            except Exception as e:
+                print(f"  ⚠️  Failed: {e}")
+                continue
+        
+        if not downloaded:
+            print(f"\n  ℹ️  No existing checkpoints found (starting fresh)")
     
     # Now check local checkpoint directory for latest checkpoint
     if args.resume:

@@ -632,7 +632,15 @@ class Trainer:
         
         # Create dataset name based on model type
         model_type = self.config['model']['type'].replace('_', '-')
-        self._kaggle_dataset_name = f"{self._kaggle_username}/{model_type}-checkpoints"
+        
+        # Use simpler dataset name format
+        if self._kaggle_username and self._kaggle_username != 'unknown':
+            self._kaggle_dataset_name = f"{self._kaggle_username}/{model_type}-checkpoints"
+        else:
+            # Fallback: use just the dataset name without username
+            # Kaggle will associate it with your account
+            self._kaggle_dataset_name = f"{model_type}-checkpoints"
+            print(f"\n⚠️  WARNING: Username not detected, using simple dataset name")
         
         print(f"\n📦 Kaggle Dataset Persistence ENABLED")
         print(f"   Username: {self._kaggle_username}")
