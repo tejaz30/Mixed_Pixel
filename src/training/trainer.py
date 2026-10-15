@@ -663,8 +663,14 @@ class Trainer:
                 shutil.rmtree(dataset_dir)
             dataset_dir.mkdir()
             
-            # Copy checkpoint to dataset directory
-            shutil.copy(checkpoint_path, dataset_dir / checkpoint_name)
+            # Copy ALL checkpoints from checkpoint directory to dataset directory
+            # This ensures both best_model.pth and latest checkpoint_epoch_X.pth are uploaded
+            checkpoint_source_dir = Path(self.config['paths']['checkpoint_dir'])
+            
+            if checkpoint_source_dir.exists():
+                for ckpt_file in checkpoint_source_dir.glob('*.pth'):
+                    shutil.copy(ckpt_file, dataset_dir / ckpt_file.name)
+                    print(f"      Preparing: {ckpt_file.name}")
             
             # Create dataset metadata
             metadata = {
@@ -681,8 +687,8 @@ class Trainer:
             result = subprocess.run(check_cmd, shell=True, capture_output=True, text=True)
             
             if result.returncode == 0:
-                # Dataset exists - create new version
-                create_cmd = f"kaggle datasets version -p {dataset_dir} -m 'Checkpoint: {checkpoint_name}' --delete-old-versions"
+                # Dataset exists - create new version (replaces all files with current set)
+                create_cmd = f"kaggle datasets version -p {dataset_dir} -m 'Updated: {checkpoint_name}'"
                 result = subprocess.run(create_cmd, shell=True, capture_output=True, text=True)
                 if result.returncode == 0:
                     print(f"    📤 Uploaded to Kaggle Dataset (updated)")
