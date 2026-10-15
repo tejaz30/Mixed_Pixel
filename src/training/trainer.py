@@ -453,6 +453,7 @@ class Trainer:
         torch.save({
             'epoch': epoch,
             'model_state_dict': model_state,
+            'optimizer_state_dict': self.optimizer.state_dict(),  # ADDED - needed for resume!
             'scheduler_state_dict': self.scheduler.state_dict() if self.scheduler else None,
             'val_loss': val_loss,
             'best_val_loss': val_loss,
