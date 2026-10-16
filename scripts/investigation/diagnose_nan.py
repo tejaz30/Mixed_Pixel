@@ -95,9 +95,28 @@ def add_diagnostics_to_trainer():
                         print(f"     First non-finite in: {[k for k, v in loss_checks.items() if not v]}")
                         raise ValueError(f"Non-finite loss at epoch {self.current_epoch}, batch {batch_idx}")
             else:
-                # VQ model - less relevant for this investigation
+                # VQ model diagnostics
                 reconstruction, vq_outputs = self.model(images)
                 losses = self.criterion(reconstruction, images, vq_outputs)
+                
+                # Ensure total loss is scalar
+                if losses['total'].dim() > 0:
+                    losses['total'] = losses['total'].mean()
+                
+                # Check loss components  
+                if batch_idx % 50 == 0:
+                    print(f"  Loss components:")
+                    print(f"    reconstruction: {losses['reconstruction'].item():.6f}")
+                    print(f"    vq_loss: {losses['vq_loss'].item():.6f}")
+                    if 'codebook_loss' in losses:
+                        print(f"    codebook_loss: {losses['codebook_loss'].item():.6f}")
+                    if 'commitment_loss' in losses:
+                        print(f"    commitment_loss: {losses['commitment_loss'].item():.6f}")
+                    print(f"    total: {losses['total'].item():.6f}")
+            
+            # Ensure loss is scalar before backward
+            if not losses['total'].dim() == 0:
+                raise ValueError(f"Loss must be scalar, got shape {losses['total'].shape}")
             
             # Backward pass
             self.optimizer.zero_grad()
