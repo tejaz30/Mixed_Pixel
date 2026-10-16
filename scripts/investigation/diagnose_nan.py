@@ -99,9 +99,10 @@ def add_diagnostics_to_trainer():
                 reconstruction, vq_outputs = self.model(images)
                 losses = self.criterion(reconstruction, images, vq_outputs)
                 
-                # Ensure total loss is scalar
-                if losses['total'].dim() > 0:
-                    losses['total'] = losses['total'].mean()
+                # Ensure all losses are scalars (mean across batch/GPUs if needed)
+                for key in losses:
+                    if torch.is_tensor(losses[key]) and losses[key].dim() > 0:
+                        losses[key] = losses[key].mean()
                 
                 # Check loss components  
                 if batch_idx % 50 == 0:
