@@ -41,18 +41,20 @@ data:
 # Training configuration
 training:
   max_epochs: 100
-  learning_rate: 5.0e-4  # Reduced from 1e-3 to prevent NaN/explosion
+  learning_rate: 2.5e-4  # REDUCED from 5e-4 for stable overnight training (same as KL)
   
   # Optimizer
   optimizer: "adam"
   betas: [0.9, 0.999]
   weight_decay: 0.0
+  eps: 1.0e-08
+  clip_grad_norm: 0.5  # REDUCED from 1.0 for more aggressive gradient clipping (same as KL)
   
   # Learning rate schedule
   lr_scheduler:
     enabled: true  # ENABLED to prevent late-stage NaN
     type: "reduce_on_plateau"
-    patience: 5
+    patience: 3  # REDUCED from 5 for faster LR reduction (same as KL)
     factor: 0.5
   
   # Early stopping
