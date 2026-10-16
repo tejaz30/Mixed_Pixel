@@ -398,6 +398,9 @@ class Trainer:
                 # Accumulate losses
                 for key, value in losses.items():
                     if torch.is_tensor(value):
+                        # Handle DataParallel: tensor may have shape [num_gpus] instead of scalar
+                        if value.dim() > 0:
+                            value = value.mean()
                         value = value.item()
                     if key not in val_losses:
                         val_losses[key] = 0.0
