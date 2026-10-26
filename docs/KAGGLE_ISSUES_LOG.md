@@ -965,3 +965,60 @@ dataset = ThermalImageDataset(
 - ✅ When models expect float32 [0,1], NEVER feed uint8 directly
 
 **Lesson:** The issue wasn't in the model architecture or signatures - it was in **data preprocessing**. A model trained on normalized floats cannot accept raw uint8 images.
+
+
+---
+
+## Issue #14: Diagnostic Classes Had Wrong Model Interfaces
+
+**Date:** 2026-10-03  
+**Context:** KL vs VQ evaluation - after fixing main script, diagnostics also failed  
+**Severity:** ⛔ CRITICAL - Script failed in diagnostic phase
+
+**Error:**
+```
+TypeError: tuple indices must be integers or slices, not str
+At: mean = outputs['mean']
+```
+
+**Root Cause:**
+- Diagnostic classes were calling models and expecting dict returns
+- KL diagnostics: `outputs = self.model(x); mean = outputs['mean']`
+- VQ diagnostics: `outputs = self.model.encode_with_vq_diagnostics(x)` (method doesn't exist!)
+- **Actual reality:**
+  - KL model returns TUPLE: `(reconstruction, mean, logvar)`
+  - VQ model.encode() returns TUPLE: `(z_quantized, h_pre_quant, vq_losses)`
+
+**Solution:**
+1. **KL Diagnostics** (`kl_diagnostics.py`):
+   ```python
+   # Fixed
+   _, mean, logvar = self.model(x, sample=False)
+   ```
+
+2. **VQ Diagnostics** (`vq_diagnostics.py`):
+   ```python
+   # Fixed
+   z_quantized, h_pre_quant, vq_losses = self.model.encode(x)
+   
+   # Compute indices manually (needed for codebook analysis)
+   h_flattened = h_pre_quant.permute(0, 2, 3, 1).contiguous().view(-1, C)
+   distances = (
+       torch.sum(h_flattened ** 2, dim=1, keepdim=True)
+       + torch.sum(self.model.quantizer.embedding.weight ** 2, dim=1)
+       - 2 * torch.matmul(h_flattened, self.model.quantizer.embedding.weight.t())
+   )
+   indices = torch.argmin(distances, dim=1).view(B, H, W)
+   ```
+
+**Fixed in:** Commit c35030b
+
+**Prevention:**
+- ✅ Read ACTUAL source code, not assumptions
+- ✅ Training code is ground truth - match its patterns
+- ✅ Verify method existence before calling
+- ✅ Run local tests BEFORE pushing to Kaggle
+
+**Related:** Issue #13 (main evaluation script had same problem)
+
+**Audit Document:** `.agents/tasks/evaluation-interface-fixes.md`
