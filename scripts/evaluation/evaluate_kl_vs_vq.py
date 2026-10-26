@@ -539,7 +539,7 @@ def main():
         '--result_dir',
         type=str,
         default='/kaggle/working/results/experiment02',
-        help='Directory to save results'
+        help='Directory to save results (will be uploaded as Kaggle Dataset)'
     )
     parser.add_argument(
         '--batch_size',
