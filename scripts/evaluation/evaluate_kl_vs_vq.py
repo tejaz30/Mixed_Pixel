@@ -558,8 +558,8 @@ def main():
     parser.add_argument(
         '--result_dir',
         type=str,
-        default='/kaggle/working/results/experiment02',
-        help='Directory to save results (will be uploaded as Kaggle Dataset)'
+        default='/kaggle/output/evaluation/experiment02',
+        help='Directory to save results (use /kaggle/output/ - persistent and downloadable)'
     )
     parser.add_argument(
         '--batch_size',
@@ -627,6 +627,103 @@ def main():
     logger.info("EVALUATION COMPLETE")
     logger.info(f"Results saved to: {result_dir}")
     logger.info("="*60)
+    
+    # Upload to Kaggle Dataset if running on Kaggle
+    if is_kaggle():
+        upload_results_to_kaggle_dataset(result_dir)
+
+
+def is_kaggle():
+    """Check if running on Kaggle."""
+    return Path('/kaggle/input').exists()
+
+
+def upload_results_to_kaggle_dataset(result_dir: Path):
+    """
+    Upload evaluation results to Kaggle Dataset.
+    Replicates the exact pattern from training checkpoint uploads.
+    """
+    try:
+        import subprocess
+        import shutil
+        from datetime import datetime
+        
+        logger.info("="*60)
+        logger.info("Uploading results to Kaggle Dataset")
+        logger.info("="*60)
+        
+        # Detect username from Kaggle environment
+        username = os.environ.get('KAGGLE_USERNAME', 'tejabulusu')
+        dataset_name = f"{username}/kl-vq-evaluation-results"
+        
+        # Create temporary dataset directory
+        dataset_dir = Path('/kaggle/temp_dataset')
+        if dataset_dir.exists():
+            shutil.rmtree(dataset_dir)
+        dataset_dir.mkdir()
+        
+        # Copy ALL result files to dataset directory (preserving structure)
+        logger.info(f"Preparing files for upload...")
+        file_count = 0
+        
+        for item in result_dir.rglob('*'):
+            if item.is_file():
+                # Preserve relative structure
+                rel_path = item.relative_to(result_dir)
+                dest_path = dataset_dir / rel_path
+                dest_path.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy(item, dest_path)
+                file_count += 1
+                logger.info(f"  Prepared: {rel_path}")
+        
+        logger.info(f"Total files prepared: {file_count}")
+        
+        # Create dataset metadata
+        metadata = {
+            "title": "KL vs VQ Evaluation Results",
+            "id": dataset_name,
+            "licenses": [{"name": "CC0-1.0"}]
+        }
+        
+        with open(dataset_dir / "dataset-metadata.json", "w") as f:
+            json.dump(metadata, f, indent=2)
+        
+        # Check if dataset exists
+        check_cmd = f"kaggle datasets status {dataset_name}"
+        result = subprocess.run(check_cmd, shell=True, capture_output=True, text=True)
+        
+        if result.returncode == 0:
+            # Dataset exists - create new version
+            logger.info(f"Dataset exists. Creating new version...")
+            create_cmd = f"kaggle datasets version -p {dataset_dir} -m 'Updated: {datetime.now().strftime('%Y-%m-%d %H:%M')}'"
+            result = subprocess.run(create_cmd, shell=True, capture_output=True, text=True)
+            if result.returncode == 0:
+                logger.info(f"📤 Uploaded to Kaggle Dataset (version updated)")
+            else:
+                logger.warning(f"⚠️  Upload failed: {result.stderr}")
+        else:
+            # Dataset doesn't exist - create it
+            logger.info(f"Creating new dataset...")
+            create_cmd = f"kaggle datasets create -p {dataset_dir}"
+            result = subprocess.run(create_cmd, shell=True, capture_output=True, text=True)
+            if result.returncode == 0:
+                logger.info(f"📤 Created Kaggle Dataset: {dataset_name}")
+            else:
+                logger.warning(f"⚠️  Dataset creation failed: {result.stderr}")
+                logger.warning(f"   Results saved locally at: {result_dir}")
+        
+        logger.info(f"📊 View dataset at: https://www.kaggle.com/datasets/{dataset_name}")
+        
+        # Cleanup
+        shutil.rmtree(dataset_dir, ignore_errors=True)
+        logger.info("="*60)
+        
+    except Exception as e:
+        # Don't break evaluation if upload fails
+        logger.warning(f"⚠️  Dataset upload exception: {e}")
+        logger.warning(f"   Results saved locally at: {result_dir}")
+        import traceback
+        traceback.print_exc()
 
 
 if __name__ == '__main__':
