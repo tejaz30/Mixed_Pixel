@@ -463,9 +463,8 @@ class KLDiagnostics:
         """
         self.model.eval()
         with torch.no_grad():
-            outputs = self.model(x)
-            mean = outputs['mean']
-            logvar = outputs['logvar']
+            # KL model returns tuple: (reconstruction, mean, logvar)
+            _, mean, logvar = self.model(x, sample=False)
             
             # Store for later aggregation
             self.all_means.append(mean.cpu())

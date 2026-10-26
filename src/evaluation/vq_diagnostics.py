@@ -81,9 +81,35 @@ class VQDiagnostics:
         """
         self.model.eval()
         with torch.no_grad():
-            # Forward pass - assumes model exposes VQ internals
-            # If not, model needs modification to return these
-            outputs = self.model.encode_with_vq_diagnostics(x)
+            # VQ model encode() returns: (z_quantized, h_pre_quant, vq_losses)
+            z_quantized, h_pre_quant, vq_losses = self.model.encode(x)
+            
+            # Compute indices by finding nearest codebook entry
+            # This matches what the quantizer does internally
+            # Flatten: (B, C, H, W) -> (B*H*W, C)
+            h_flattened = h_pre_quant.permute(0, 2, 3, 1).contiguous().view(-1, h_pre_quant.shape[1])
+            
+            # Compute distances to all codebook entries
+            distances = (
+                torch.sum(h_flattened ** 2, dim=1, keepdim=True)
+                + torch.sum(self.model.quantizer.embedding.weight ** 2, dim=1)
+                - 2 * torch.matmul(h_flattened, self.model.quantizer.embedding.weight.t())
+            )
+            
+            # Find nearest entry
+            encoding_indices = torch.argmin(distances, dim=1)
+            
+            # Reshape to (B, H, W)
+            B, C, H, W = h_pre_quant.shape
+            indices = encoding_indices.view(B, H, W)
+            
+            # Build output dict matching expected format
+            outputs = {
+                'post_quant': z_quantized,
+                'pre_quant': h_pre_quant,
+                'indices': indices,
+                'vq_loss': vq_losses.get('vq_loss', None)
+            }
             
         return outputs
     
