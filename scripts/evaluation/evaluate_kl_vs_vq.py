@@ -291,23 +291,21 @@ def evaluate_kl_autoencoder(
         for batch_idx, batch in enumerate(dataloader):
             images = batch['image'].to(device)
             
-            # Forward pass
-            outputs = model(images)
-            reconstructed = outputs['reconstruction']
+            # Forward pass - KL model returns tuple: (reconstruction, mean, logvar)
+            reconstruction, mean, logvar = model(images, sample=False)  # Use mean for eval
             
             # Reconstruction metrics
-            batch_recon = recon_metrics.compute_batch_metrics(images, reconstructed)
+            batch_recon = recon_metrics.compute_batch_metrics(images, reconstruction)
             
             # Boundary metrics
-            batch_boundary = boundary_metrics.compute_batch_metrics(images, reconstructed)
+            batch_boundary = boundary_metrics.compute_batch_metrics(images, reconstruction)
             
             # KL diagnostics
             batch_kl_diag = kl_diagnostics.process_batch(images)
             
-            # Latent distribution
-            latents = outputs['latent']
-            batch_latent = latent_analyzer.assess_ldm_readiness(latents)
-            kl_latents.append(latents)
+            # Latent distribution (use mean for analysis)
+            batch_latent = latent_analyzer.assess_ldm_readiness(mean)
+            kl_latents.append(mean)
             
             # Aggregate
             all_metrics.append({
@@ -393,23 +391,25 @@ def evaluate_vq_autoencoder(
         for batch_idx, batch in enumerate(dataloader):
             images = batch['image'].to(device)
             
-            # Forward pass
-            outputs = model(images)
-            reconstructed = outputs['reconstruction']
+            # Forward pass - VQ model returns tuple: (reconstruction, loss_dict)
+            reconstruction, loss_dict = model(images)
+            
+            # Extract latents from loss_dict
+            z_quantized = loss_dict['z_quantized']  # Post-quantization latent
+            z_continuous = loss_dict['z_continuous']  # Pre-quantization latent
             
             # Reconstruction metrics
-            batch_recon = recon_metrics.compute_batch_metrics(images, reconstructed)
+            batch_recon = recon_metrics.compute_batch_metrics(images, reconstruction)
             
             # Boundary metrics
-            batch_boundary = boundary_metrics.compute_batch_metrics(images, reconstructed)
+            batch_boundary = boundary_metrics.compute_batch_metrics(images, reconstruction)
             
             # VQ diagnostics
             batch_vq_diag = vq_diagnostics.process_batch(images)
             
-            # Latent distribution (use post-quant for now)
-            latents = outputs['post_quant']
-            batch_latent = latent_analyzer.assess_ldm_readiness(latents)
-            vq_latents.append(latents)
+            # Latent distribution (use quantized latent for LDM readiness)
+            batch_latent = latent_analyzer.assess_ldm_readiness(z_quantized)
+            vq_latents.append(z_quantized)
             
             # Aggregate
             all_metrics.append({
