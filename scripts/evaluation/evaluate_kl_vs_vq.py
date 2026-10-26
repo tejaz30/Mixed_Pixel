@@ -40,6 +40,7 @@ import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Subset
 import yaml
+import numpy as np
 
 # Project imports - use direct module loading for Kaggle compatibility
 import importlib.util
@@ -195,26 +196,40 @@ def create_validation_loader(
     """
     logger.info("Creating validation dataset")
     
-    # Create dataset
+    # Create dataset with actual signature: root_dir not data_dir
     dataset = ThermalImageDataset(
-        data_dir=data_dir,
-        split='val',
-        val_ratio=0.2,
-        seed=42,
-        augment=False
+        root_dir=data_dir,  # Correct parameter name
+        load_mode='rgb',
+        return_path=False
     )
+    
+    # For validation, we need to manually split since the dataset loads all images
+    # Use seed=42 for reproducibility
+    torch.manual_seed(42)
+    np.random.seed(42)
+    
+    # Create train/val split indices
+    total_size = len(dataset)
+    indices = list(range(total_size))
+    np.random.shuffle(indices)
+    
+    # 80/20 split
+    split = int(0.8 * total_size)
+    val_indices = indices[split:]
     
     # Sanity check: subsample
     if sanity_check:
         logger.info("SANITY CHECK MODE: Using only 20 validation samples")
-        indices = list(range(min(20, len(dataset))))
-        dataset = Subset(dataset, indices)
+        val_indices = val_indices[:min(20, len(val_indices))]
     
-    logger.info(f"Validation set size: {len(dataset)}")
+    logger.info(f"Validation set size: {len(val_indices)}")
+    
+    # Create subset
+    val_dataset = Subset(dataset, val_indices)
     
     # Create dataloader
     loader = DataLoader(
-        dataset,
+        val_dataset,
         batch_size=batch_size,
         shuffle=False,  # Fixed order for reproducibility
         num_workers=num_workers,
