@@ -121,11 +121,13 @@ def load_kl_model(checkpoint_path: Path, config: dict, device: torch.device) -> 
     """
     logger.info(f"Loading KL model from {checkpoint_path}")
     
-    # Create model
+    # Create model with actual signature from model.py
     model = KLAutoencoder(
         in_channels=config['model']['in_channels'],
         latent_channels=config['model']['latent_channels'],
-        base_channels=config['model']['base_channels']
+        base_channels=config['model']['base_channels'],
+        channel_multipliers=tuple(config['model'].get('channel_multipliers', [1, 2, 4, 4])),
+        num_res_blocks=config['model'].get('num_res_blocks', 2)
     )
     
     # Load checkpoint
@@ -152,14 +154,15 @@ def load_vq_model(checkpoint_path: Path, config: dict, device: torch.device) -> 
     """
     logger.info(f"Loading VQ model from {checkpoint_path}")
     
-    # Create model - handle both 'codebook_size' and 'num_embeddings' keys
-    codebook_size = config['model'].get('codebook_size') or config['model'].get('num_embeddings', 512)
-    
+    # Create model with actual signature from model.py
     model = VQAutoencoder(
         in_channels=config['model']['in_channels'],
         latent_channels=config['model']['latent_channels'],
         base_channels=config['model']['base_channels'],
-        codebook_size=codebook_size
+        channel_multipliers=tuple(config['model'].get('channel_multipliers', [1, 2, 4, 4])),
+        num_res_blocks=config['model'].get('num_res_blocks', 2),
+        num_embeddings=config['model'].get('num_embeddings', 1024),
+        commitment_cost=config['model'].get('commitment_cost', 0.25)
     )
     
     # Load checkpoint
@@ -583,7 +586,7 @@ def main():
         dataloader=val_loader,
         device=device,
         result_dir=result_dir,
-        codebook_size=vq_config['model'].get('codebook_size') or vq_config['model'].get('num_embeddings', 512)
+        codebook_size=vq_config['model'].get('num_embeddings', 1024)
     )
     
     # Compare
