@@ -19,6 +19,7 @@ from pathlib import Path
 import argparse
 import logging
 import json
+import os
 from datetime import datetime
 
 # Setup logging FIRST before any imports that might fail
