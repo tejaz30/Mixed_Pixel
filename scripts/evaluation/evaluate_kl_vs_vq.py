@@ -152,12 +152,14 @@ def load_vq_model(checkpoint_path: Path, config: dict, device: torch.device) -> 
     """
     logger.info(f"Loading VQ model from {checkpoint_path}")
     
-    # Create model
+    # Create model - handle both 'codebook_size' and 'num_embeddings' keys
+    codebook_size = config['model'].get('codebook_size') or config['model'].get('num_embeddings', 512)
+    
     model = VQAutoencoder(
         in_channels=config['model']['in_channels'],
         latent_channels=config['model']['latent_channels'],
         base_channels=config['model']['base_channels'],
-        codebook_size=config['model']['codebook_size']
+        codebook_size=codebook_size
     )
     
     # Load checkpoint
@@ -581,7 +583,7 @@ def main():
         dataloader=val_loader,
         device=device,
         result_dir=result_dir,
-        codebook_size=vq_config['model']['codebook_size']
+        codebook_size=vq_config['model'].get('codebook_size') or vq_config['model'].get('num_embeddings', 512)
     )
     
     # Compare
