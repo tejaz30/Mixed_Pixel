@@ -249,7 +249,8 @@ class ReconstructionMetrics:
     def __init__(
         self,
         data_range: float = 1.0,
-        ssim_config: Optional[SSIMConfig] = None
+        ssim_config: Optional[SSIMConfig] = None,
+        device: Optional[torch.device] = None  # Accept for API compatibility
     ):
         """
         Initialize metrics computer.
@@ -257,8 +258,10 @@ class ReconstructionMetrics:
         Args:
             data_range: Data range for images (1.0 for [0,1], 255.0 for [0,255]).
             ssim_config: SSIM configuration. If None, creates default with data_range.
+            device: Device parameter (kept for API compatibility, not used).
         """
         self.data_range = data_range
+        self.device = device  # Store but not used (metrics run on CPU)
         
         if ssim_config is None:
             self.ssim_config = SSIMConfig(data_range=data_range)
@@ -271,10 +274,19 @@ class ReconstructionMetrics:
                     f"differs from provided data_range ({data_range})"
                 )
         
+        # Initialize batch-wise accumulators
+        self.reset_accumulators()
+        
         logging.info(f"ReconstructionMetrics initialized with data_range={self.data_range}")
         logging.info(f"SSIM parameters: win_size={self.ssim_config.win_size}, "
                     f"gaussian_weights={self.ssim_config.gaussian_weights}, "
                     f"sigma={self.ssim_config.sigma}")
+    
+    def reset_accumulators(self):
+        """Reset batch-wise accumulators."""
+        self.mses = []
+        self.ssims = []
+        self.psnrs = []
     
     def compute_all(
         self,
@@ -320,5 +332,128 @@ class ReconstructionMetrics:
                 'use_sample_covariance': self.ssim_config.use_sample_covariance,
                 'k1': self.ssim_config.k1,
                 'k2': self.ssim_config.k2
+            }
+        }
+
+    # Add batch-wise processing methods for evaluation pipeline compatibility
+    def __init__(
+        self,
+        data_range: float = 1.0,
+        ssim_config: Optional[SSIMConfig] = None,
+        device: Optional[torch.device] = None  # Accept but ignore device for compatibility
+    ):
+        """
+        Initialize metrics computer.
+        
+        Args:
+            data_range: Data range for images (1.0 for [0,1], 255.0 for [0,255]).
+            ssim_config: SSIM configuration. If None, creates default with data_range.
+            device: Device parameter (kept for API compatibility, not used).
+        """
+        self.data_range = data_range
+        self.device = device  # Store for compatibility but not used
+        
+        if ssim_config is None:
+            self.ssim_config = SSIMConfig(data_range=data_range)
+        else:
+            self.ssim_config = ssim_config
+            if self.ssim_config.data_range != data_range:
+                logging.warning(
+                    f"SSIM config data_range ({self.ssim_config.data_range}) "
+                    f"differs from provided data_range ({data_range})"
+                )
+        
+        # Initialize accumulators for batch-wise processing
+        self.reset_accumulators()
+        
+        logging.info(f"ReconstructionMetrics initialized with data_range={self.data_range}")
+    
+    def reset_accumulators(self):
+        """Reset batch-wise accumulators."""
+        self.mses = []
+        self.ssims = []
+        self.psnrs = []
+    
+    def compute_batch_metrics(
+        self,
+        original: torch.Tensor,
+        reconstruction: torch.Tensor
+    ) -> dict:
+        """
+        Compute metrics for a batch of images.
+        
+        Args:
+            original: Original images [B, C, H, W]
+            reconstruction: Reconstructed images [B, C, H, W]
+            
+        Returns:
+            Dictionary with batch-averaged metrics
+        """
+        batch_size = original.shape[0]
+        batch_mses = []
+        batch_ssims = []
+        batch_psnrs = []
+        
+        # Convert to numpy
+        orig_np = original.cpu().numpy()
+        recon_np = reconstruction.cpu().numpy()
+        
+        for i in range(batch_size):
+            # Get single image [C, H, W] -> [H, W, C] or [H, W]
+            orig_img = np.transpose(orig_np[i], (1, 2, 0)) if orig_np.shape[1] > 1 else orig_np[i, 0]
+            recon_img = np.transpose(recon_np[i], (1, 2, 0)) if recon_np.shape[1] > 1 else recon_np[i, 0]
+            
+            # Compute metrics
+            mse = compute_mse(orig_img, recon_img, self.data_range)
+            ssim = compute_ssim(orig_img, recon_img, self.ssim_config)
+            
+            # PSNR from MSE
+            if mse > 0:
+                psnr = 10 * np.log10((self.data_range ** 2) / mse)
+            else:
+                psnr = 100.0  # Perfect reconstruction
+            
+            batch_mses.append(mse)
+            batch_ssims.append(ssim)
+            batch_psnrs.append(psnr)
+        
+        # Store for aggregation
+        self.mses.extend(batch_mses)
+        self.ssims.extend(batch_ssims)
+        self.psnrs.extend(batch_psnrs)
+        
+        # Return batch averages
+        return {
+            'mse': float(np.mean(batch_mses)),
+            'ssim': float(np.mean(batch_ssims)),
+            'psnr': float(np.mean(batch_psnrs))
+        }
+    
+    def aggregate_metrics(self) -> dict:
+        """
+        Aggregate metrics across all processed batches.
+        
+        Returns:
+            Dictionary with dataset-level statistics
+        """
+        if not self.mses:
+            return {'error': 'No batches processed'}
+        
+        return {
+            'mse': {
+                'mean': float(np.mean(self.mses)),
+                'std': float(np.std(self.mses)),
+                'min': float(np.min(self.mses)),
+                'max': float(np.max(self.mses))
+            },
+            'ssim': {
+                'mean': float(np.mean(self.ssims)),
+                'std': float(np.std(self.ssims)),
+                'min': float(np.min(self.ssims)),
+                'max': float(np.max(self.ssims))
+            },
+            'psnr': {
+                'mean': float(np.mean(self.psnrs)),
+                'std': float(np.std(self.psnrs))
             }
         }

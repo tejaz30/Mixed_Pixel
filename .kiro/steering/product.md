@@ -5,7 +5,7 @@
 Mixed-Pixel Detection in Agricultural Thermal Imagery
 
 ## Project Goal
-
+    
 Develop and benchmark deep-learning architectures for unsupervised mixed-pixel detection in agricultural thermal imagery.
 
 The project investigates whether alternative representation and reconstruction architectures can improve upon a conventional Convolutional Autoencoder (CAE) baseline, particularly in preserving important thermal boundaries and supporting reliable mixed-pixel detection.

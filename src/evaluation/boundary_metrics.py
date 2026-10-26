@@ -276,3 +276,127 @@ def evaluate_boundary_reconstruction(
     metrics_avg = {k: v / batch_size for k, v in metrics_accum.items()}
     
     return metrics_avg
+
+
+
+# Wrapper class for batch-wise processing compatibility
+class BoundaryMetrics:
+    """
+    Wrapper class for boundary metrics to provide batch-wise processing API
+    compatible with the evaluation pipeline.
+    """
+    
+    def __init__(self, device: torch.device, threshold_percentile: float = 75.0):
+        self.device = device
+        self.threshold_percentile = threshold_percentile
+        self.reset_accumulators()
+    
+    def reset_accumulators(self):
+        """Reset accumulators for batch-wise processing."""
+        self.boundary_mses = []
+        self.non_boundary_mses = []
+        self.boundary_ratios = []
+        self.gradient_preservations = []
+    
+    def compute_batch_metrics(
+        self,
+        original: torch.Tensor,
+        reconstruction: torch.Tensor
+    ) -> Dict[str, float]:
+        """
+        Compute boundary metrics for a batch.
+        
+        Args:
+            original: Original images [B, C, H, W]
+            reconstruction: Reconstructed images [B, C, H, W]
+            
+        Returns:
+            Dictionary with batch-averaged metrics
+        """
+        batch_size = original.shape[0]
+        batch_boundary_mse = []
+        batch_non_boundary_mse = []
+        batch_boundary_ratio = []
+        batch_grad_pres = []
+        
+        # Convert to numpy for processing
+        orig_np = original.cpu().numpy()
+        recon_np = reconstruction.cpu().numpy()
+        
+        for i in range(batch_size):
+            # Get single image [C, H, W] -> [H, W, C] or [H, W]
+            orig_img = np.transpose(orig_np[i], (1, 2, 0)) if orig_np.shape[1] > 1 else orig_np[i, 0]
+            recon_img = np.transpose(recon_np[i], (1, 2, 0)) if recon_np.shape[1] > 1 else recon_np[i, 0]
+            
+            # Compute gradient magnitude for original
+            grad_mag = compute_gradient_magnitude(orig_img)
+            
+            # Create boundary mask
+            boundary_mask = create_boundary_mask(
+                grad_mag,
+                threshold_percentile=self.threshold_percentile
+            )
+            
+            # Compute metrics
+            metrics = compute_boundary_reconstruction_metrics(
+                orig_img,
+                recon_img,
+                boundary_mask
+            )
+            
+            batch_boundary_mse.append(metrics['boundary_mse'])
+            batch_non_boundary_mse.append(metrics['non_boundary_mse'])
+            batch_boundary_ratio.append(metrics['error_ratio'])
+            
+            # Gradient preservation
+            orig_grad = compute_gradient_magnitude(orig_img)
+            recon_grad = compute_gradient_magnitude(recon_img)
+            grad_pres = 1.0 - np.mean(np.abs(orig_grad - recon_grad)) / (np.mean(orig_grad) + 1e-8)
+            batch_grad_pres.append(grad_pres)
+        
+        # Average across batch
+        avg_metrics = {
+            'boundary_mse': float(np.mean(batch_boundary_mse)),
+            'non_boundary_mse': float(np.mean(batch_non_boundary_mse)),
+            'boundary_ratio': float(np.mean(batch_boundary_ratio)),
+            'gradient_preservation': float(np.mean(batch_grad_pres))
+        }
+        
+        # Store for global aggregation
+        self.boundary_mses.extend(batch_boundary_mse)
+        self.non_boundary_mses.extend(batch_non_boundary_mse)
+        self.boundary_ratios.extend(batch_boundary_ratio)
+        self.gradient_preservations.extend(batch_grad_pres)
+        
+        return avg_metrics
+    
+    def aggregate_metrics(self) -> Dict[str, float]:
+        """
+        Aggregate metrics across all processed batches.
+        
+        Returns:
+            Dictionary with dataset-level metrics
+        """
+        if not self.boundary_mses:
+            return {'error': 'No batches processed'}
+        
+        return {
+            'boundary_mse': {
+                'mean': float(np.mean(self.boundary_mses)),
+                'std': float(np.std(self.boundary_mses)),
+                'min': float(np.min(self.boundary_mses)),
+                'max': float(np.max(self.boundary_mses))
+            },
+            'non_boundary_mse': {
+                'mean': float(np.mean(self.non_boundary_mses)),
+                'std': float(np.std(self.non_boundary_mses))
+            },
+            'boundary_ratio': {
+                'mean': float(np.mean(self.boundary_ratios)),
+                'std': float(np.std(self.boundary_ratios))
+            },
+            'gradient_preservation': {
+                'mean': float(np.mean(self.gradient_preservations)),
+                'std': float(np.std(self.gradient_preservations))
+            }
+        }

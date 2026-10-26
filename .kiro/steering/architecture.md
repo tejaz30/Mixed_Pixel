@@ -130,7 +130,7 @@ Every major experiment should have:
 - model version
 - dataset information
 - training settings
-- evaluation settings
+- evaluation settings   
 - results
 - relevant checkpoints
 - notes on interpretation
