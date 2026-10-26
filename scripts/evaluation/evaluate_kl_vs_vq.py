@@ -21,25 +21,76 @@ import logging
 import json
 from datetime import datetime
 
-# Add src to path
+# Add src to path - handle both local and Kaggle environments
 project_root = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(project_root / 'src'))
+src_path = project_root / 'src'
+
+# Add src to path if not already there
+if str(src_path) not in sys.path:
+    sys.path.insert(0, str(src_path))
 
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader, Subset
 import yaml
 
-# Project imports
-from datasets.thermal_dataset import ThermalImageDataset
-from models.kl_autoencoder import KLAutoencoder
-from models.vq_autoencoder import VQAutoencoder
-from evaluation.reconstruction_metrics import ReconstructionMetrics
-from evaluation.boundary_metrics import BoundaryMetrics
-from evaluation.kl_diagnostics import KLDiagnostics
-from evaluation.vq_diagnostics import VQDiagnostics
-from evaluation.latent_distribution import LatentDistributionAnalyzer, compare_distributions
-from evaluation.compare_kl_vq import KLVQComparator, aggregate_results_for_comparison
+# Project imports - use absolute imports from src
+try:
+    # Try package-style imports first
+    from datasets.thermal_dataset import ThermalImageDataset
+    from models.kl_autoencoder import KLAutoencoder
+    from models.vq_autoencoder import VQAutoencoder
+    from evaluation.reconstruction_metrics import ReconstructionMetrics
+    from evaluation.boundary_metrics import BoundaryMetrics
+    from evaluation.kl_diagnostics import KLDiagnostics
+    from evaluation.vq_diagnostics import VQDiagnostics
+    from evaluation.latent_distribution import LatentDistributionAnalyzer, compare_distributions
+    from evaluation.compare_kl_vq import KLVQComparator, aggregate_results_for_comparison
+except ImportError as e:
+    logger.error(f"Import error with package-style imports: {e}")
+    logger.info("Trying direct module imports...")
+    
+    # Fallback: import modules directly
+    import importlib.util
+    
+    def import_from_path(module_name, file_path):
+        spec = importlib.util.spec_from_file_location(module_name, file_path)
+        module = importlib.util.module_from_spec(spec)
+        sys.modules[module_name] = module
+        spec.loader.exec_module(module)
+        return module
+    
+    # Import each module
+    thermal_dataset_mod = import_from_path('thermal_dataset', src_path / 'datasets' / 'thermal_dataset.py')
+    ThermalImageDataset = thermal_dataset_mod.ThermalImageDataset
+    
+    kl_autoencoder_mod = import_from_path('kl_autoencoder', src_path / 'models' / 'kl_autoencoder.py')
+    KLAutoencoder = kl_autoencoder_mod.KLAutoencoder
+    
+    vq_autoencoder_mod = import_from_path('vq_autoencoder', src_path / 'models' / 'vq_autoencoder.py')
+    VQAutoencoder = vq_autoencoder_mod.VQAutoencoder
+    
+    recon_metrics_mod = import_from_path('reconstruction_metrics', src_path / 'evaluation' / 'reconstruction_metrics.py')
+    ReconstructionMetrics = recon_metrics_mod.ReconstructionMetrics
+    
+    boundary_metrics_mod = import_from_path('boundary_metrics', src_path / 'evaluation' / 'boundary_metrics.py')
+    BoundaryMetrics = boundary_metrics_mod.BoundaryMetrics
+    
+    kl_diag_mod = import_from_path('kl_diagnostics', src_path / 'evaluation' / 'kl_diagnostics.py')
+    KLDiagnostics = kl_diag_mod.KLDiagnostics
+    
+    vq_diag_mod = import_from_path('vq_diagnostics', src_path / 'evaluation' / 'vq_diagnostics.py')
+    VQDiagnostics = vq_diag_mod.VQDiagnostics
+    
+    latent_dist_mod = import_from_path('latent_distribution', src_path / 'evaluation' / 'latent_distribution.py')
+    LatentDistributionAnalyzer = latent_dist_mod.LatentDistributionAnalyzer
+    compare_distributions = latent_dist_mod.compare_distributions
+    
+    compare_mod = import_from_path('compare_kl_vq', src_path / 'evaluation' / 'compare_kl_vq.py')
+    KLVQComparator = compare_mod.KLVQComparator
+    aggregate_results_for_comparison = compare_mod.aggregate_results_for_comparison
+    
+    logger.info("✓ Successfully imported all modules via direct import")
 
 # Setup logging
 logging.basicConfig(

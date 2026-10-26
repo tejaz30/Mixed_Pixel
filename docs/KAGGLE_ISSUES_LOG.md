@@ -829,3 +829,85 @@ This is especially important for Kaggle deployment where dataset structures may 
 - All future dataset/file processing code should explicitly handle both flat and nested structures
 - Add tests for both directory structures
 - Document expected directory structure clearly in docstrings
+
+
+---
+
+## Issue #14: Module Import Error in Evaluation Script
+
+**Error:**
+```
+ModuleNotFoundError: No module named 'datasets.thermal_dataset'
+```
+
+**Cause:**
+- Evaluation script uses package-style imports: `from datasets.thermal_dataset import ...`
+- In Kaggle, when src is added to path, Python doesn't treat subdirectories as packages
+- Missing `__init__.py` files or path configuration issues
+
+**Solution:**
+- Updated `scripts/evaluation/evaluate_kl_vs_vq.py` with robust import fallback:
+  ```python
+  # Try package imports first, fallback to direct module imports
+  try:
+      from datasets.thermal_dataset import ThermalImageDataset
+      # ... other imports
+  except ImportError:
+      # Fallback: use importlib to load modules directly
+      import importlib.util
+      # Load each module explicitly
+  ```
+
+**Prevention:**
+- ✅ Always test scripts in Kaggle-like environment (no package structure)
+- ✅ Provide fallback import mechanism for robustness
+- ✅ Add `__init__.py` files to all src subdirectories
+- ⚠️ Kaggle doesn't preserve package structure from git repos
+
+**Related Files:**
+- `scripts/evaluation/evaluate_kl_vs_vq.py` - Fixed with fallback imports
+- All evaluation scripts should use same pattern
+
+---
+
+## Issue #15: Results Visualization and Download
+
+**Question:**
+Where do results appear and how to visualize them in Kaggle?
+
+**Answer:**
+Results are saved to `/kaggle/working/results/experiment02/`:
+
+**File Structure:**
+```
+results/experiment02/
+├── kl/
+│   ├── kl_evaluation_results.json       # Metrics summary
+│   ├── *.npy files                      # Raw diagnostic data
+├── vq/
+│   ├── vq_evaluation_results.json       # Metrics summary
+│   ├── *.npy files                      # Raw diagnostic data
+└── comparison/
+    └── kl_vs_vq_comparison.json         # Full comparison report
+```
+
+**In Kaggle:**
+1. Results print to notebook output (summary metrics, key findings)
+2. JSON files contain full detailed results
+3. NumPy .npy files contain raw data for visualization
+4. Download from Output tab (right sidebar) after run completes
+
+**Visualization:**
+- Basic: Codebook usage chart shown in notebook cell #8
+- Full: Download results and visualize locally with matplotlib/seaborn
+- JSON files are human-readable for quick review
+
+**Download:**
+- Kaggle automatically saves `/kaggle/working/` to Output
+- Click Output tab → Download button
+- Gets zip with entire `results/experiment02/` folder
+
+**Prevention:**
+- ✅ Always check Output tab exists before starting long runs
+- ✅ Print key metrics to notebook for quick review
+- ✅ Save both JSON (human-readable) and NPY (visualization) formats
