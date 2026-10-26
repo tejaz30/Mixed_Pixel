@@ -911,3 +911,57 @@ results/experiment02/
 - ✅ Always check Output tab exists before starting long runs
 - ✅ Print key metrics to notebook for quick review
 - ✅ Save both JSON (human-readable) and NPY (visualization) formats
+
+
+---
+
+## Issue #13: Dtype Mismatch - uint8 vs float32
+
+**Date:** 2026-10-03  
+**Context:** KL vs VQ evaluation in Kaggle  
+**Severity:** ⛔ CRITICAL - Script failed immediately on first forward pass
+
+**Error:**
+```
+RuntimeError: Input type (unsigned char) and bias type (float) should be the same
+```
+
+**Root Cause:**
+- Models were **trained** on `[0, 1]` float32 tensors
+- Training code uses `get_val_transforms(normalize=False)` which applies `ToTensor()`
+- `ToTensor()` does TWO things:
+  1. Converts uint8 → float32
+  2. Normalizes [0, 255] → [0, 1]
+- **Evaluation script** was creating dataset with `transform=None`
+- This fed raw uint8 tensors directly to the model
+- Model's Conv2d layers expect float32 inputs
+
+**Solution:**
+```python
+# Import transforms module
+transforms_mod = import_from_path('transforms', src_path / 'data' / 'transforms.py')
+get_val_transforms = transforms_mod.get_val_transforms
+
+# Apply transforms when creating dataset
+val_transform = get_val_transforms(
+    image_size=(480, 640),
+    normalize=False  # Matches training: only ToTensor, no mean/std normalization
+)
+
+dataset = ThermalImageDataset(
+    root_dir=data_dir,
+    load_mode='rgb',
+    return_path=False,
+    transform=val_transform  # ← This was missing!
+)
+```
+
+**Fixed in:** Commit b0e3497
+
+**Prevention:**
+- ✅ **ALWAYS match preprocessing between training and evaluation**
+- ✅ Check `trainer.py` to see what transforms were used during training
+- ✅ Apply identical transforms in evaluation/inference code
+- ✅ When models expect float32 [0,1], NEVER feed uint8 directly
+
+**Lesson:** The issue wasn't in the model architecture or signatures - it was in **data preprocessing**. A model trained on normalized floats cannot accept raw uint8 images.
