@@ -86,6 +86,10 @@ compare_mod = import_from_path('compare_kl_vq', src_path / 'evaluation' / 'compa
 KLVQComparator = compare_mod.KLVQComparator
 aggregate_results_for_comparison = compare_mod.aggregate_results_for_comparison
 
+# Import transforms (needed for preprocessing images to match training)
+transforms_mod = import_from_path('transforms', src_path / 'data' / 'transforms.py')
+get_val_transforms = transforms_mod.get_val_transforms
+
 logger.info("✓ All modules loaded successfully")
 
 
@@ -196,11 +200,19 @@ def create_validation_loader(
     """
     logger.info("Creating validation dataset")
     
+    # Create transforms matching training (normalize=False means only ToTensor applied)
+    # This converts uint8 -> float32 and normalizes to [0, 1]
+    val_transform = get_val_transforms(
+        image_size=(480, 640),
+        normalize=False  # Matches training: only ToTensor, no mean/std normalization
+    )
+    
     # Create dataset with actual signature: root_dir not data_dir
     dataset = ThermalImageDataset(
         root_dir=data_dir,  # Correct parameter name
         load_mode='rgb',
-        return_path=False
+        return_path=False,
+        transform=val_transform  # Apply transforms
     )
     
     # For validation, we need to manually split since the dataset loads all images
