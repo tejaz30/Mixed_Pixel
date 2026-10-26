@@ -55,7 +55,7 @@ def import_from_path(module_name, file_path):
 logger.info("Loading project modules...")
 
 # Import each module directly (Kaggle-compatible)
-thermal_dataset_mod = import_from_path('thermal_dataset', src_path / 'datasets' / 'thermal_dataset.py')
+thermal_dataset_mod = import_from_path('thermal_dataset', src_path / 'data' / 'thermal_dataset.py')
 ThermalImageDataset = thermal_dataset_mod.ThermalImageDataset
 
 kl_autoencoder_mod = import_from_path('kl_autoencoder', src_path / 'models' / 'kl_autoencoder.py')
