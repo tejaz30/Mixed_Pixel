@@ -337,17 +337,35 @@ class VQDiagnostics:
         
         return results
     
-    def save_diagnostics(self, save_path: Path):
+    def save_diagnostics(self, save_path: Path, expected_samples=None):
         """
         Save codebook usage histogram and other visualizations.
         
         Args:
             save_path: Directory to save diagnostic outputs
+            expected_samples: Expected number of samples (for validation)
         """
         save_path = Path(save_path)
         save_path.mkdir(parents=True, exist_ok=True)
         
+        # Validate sample counts
+        if expected_samples is not None:
+            actual_perp = len(self.perplexity_values)
+            actual_quant = len(self.quantization_errors)
+            
+            if actual_perp != expected_samples:
+                logger.warning(
+                    f"Perplexity trajectory count mismatch: "
+                    f"expected {expected_samples}, got {actual_perp}"
+                )
+            if actual_quant != expected_samples:
+                logger.warning(
+                    f"Quantization error trajectory count mismatch: "
+                    f"expected {expected_samples}, got {actual_quant}"
+                )
+        
         # Save codebook usage histogram data
+        logger.info(f"Saving VQ diagnostics: {len(self.perplexity_values)} samples")
         np.save(
             save_path / 'codebook_usage_counts.npy',
             self.codebook_usage_count

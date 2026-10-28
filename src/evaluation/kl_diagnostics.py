@@ -542,8 +542,14 @@ class KLDiagnostics:
             }
         }
     
-    def save_diagnostics(self, save_path):
-        """Save diagnostic data."""
+    def save_diagnostics(self, save_path, expected_samples=None):
+        """
+        Save diagnostic data with optional sample count validation.
+        
+        Args:
+            save_path: Directory to save diagnostics
+            expected_samples: Expected number of samples (for validation)
+        """
         from pathlib import Path
         save_path = Path(save_path)
         save_path.mkdir(parents=True, exist_ok=True)
@@ -552,6 +558,20 @@ class KLDiagnostics:
             all_means = torch.cat(self.all_means, dim=0)
             all_logvars = torch.cat(self.all_logvars, dim=0)
             
+            # Validate sample count
+            actual_samples = all_means.shape[0]
+            if expected_samples is not None and actual_samples != expected_samples:
+                logger.warning(
+                    f"Sample count mismatch in KL diagnostics: "
+                    f"expected {expected_samples}, got {actual_samples}. "
+                    f"This may indicate accumulated data from multiple runs."
+                )
+                if actual_samples > expected_samples:
+                    logger.warning(f"Truncating to first {expected_samples} samples.")
+                    all_means = all_means[:expected_samples]
+                    all_logvars = all_logvars[:expected_samples]
+            
+            logger.info(f"Saving {all_means.shape[0]} posterior samples")
             np.save(save_path / 'posterior_means.npy', all_means.numpy())
             np.save(save_path / 'posterior_logvars.npy', all_logvars.numpy())
             np.save(save_path / 'kl_divergences.npy', np.array(self.kl_divergences))

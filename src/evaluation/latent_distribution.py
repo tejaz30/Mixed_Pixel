@@ -48,13 +48,15 @@ class LatentDistributionAnalyzer:
         
     def characterize_distribution(
         self,
-        latents: torch.Tensor
+        latents: torch.Tensor,
+        store_trajectory: bool = True
     ) -> Dict[str, Any]:
         """
         Characterize the statistical distribution of a latent tensor.
         
         Args:
             latents: Latent representation [B, C, H, W]
+            store_trajectory: Whether to store in trajectory accumulators
             
         Returns:
             Dictionary with distribution characteristics
@@ -86,10 +88,11 @@ class LatentDistributionAnalyzer:
         kurtosis_mean = float(np.mean(channel_kurtosis))
         skewness_mean = float(np.mean(channel_skewness))
         
-        # Store for aggregation
-        self.latent_samples.append(latents.cpu())
-        self.latent_means.append(global_mean)
-        self.latent_stds.append(global_std)
+        # Store for aggregation (only if requested to avoid double-counting)
+        if store_trajectory:
+            self.latent_samples.append(latents.cpu())
+            self.latent_means.append(global_mean)
+            self.latent_stds.append(global_std)
         
         return {
             'global_mean': global_mean,
@@ -355,8 +358,8 @@ class LatentDistributionAnalyzer:
         # Aggregate all latents
         all_latents = torch.cat(self.latent_samples, dim=0)
         
-        # Global distribution
-        global_dist = self.characterize_distribution(all_latents)
+        # Global distribution (don't store trajectory to avoid double-counting)
+        global_dist = self.characterize_distribution(all_latents, store_trajectory=False)
         
         # Stability
         stability = self.assess_stability()
