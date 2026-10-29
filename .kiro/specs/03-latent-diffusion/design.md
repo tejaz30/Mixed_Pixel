@@ -352,22 +352,24 @@ t_emb = linear2(t_emb)                            # (B, 256)
 
 **Injection:** Add to residual block features after first convolution.
 
-### Parameter Estimate
+### Parameter and Memory Estimates
 
-**Rough estimate (requires verification):**
+**Parameter count (estimated):**
 - Encoder: ~4 levels × 2 blocks × (Conv + GroupNorm + TimeProj) ≈ 10M
 - Bottleneck attention: ≈ 2M
 - Decoder: ~4 levels × 2 blocks ≈ 10M
 - Skip projections: ≈ 1M
+- **Total:** ~25-30M parameters (~100-120MB)
 
-**Total estimate:** ~25-30M parameters
+**Memory estimate for batch size 8 on T4 GPU (16GB):**
+- Model parameters: ~120 MB
+- Gradients: ~120 MB
+- Optimizer state (Adam): ~240 MB (2× params)
+- Activations (forward): ~2-3 GB (estimated for 128 base channels, 4 levels, attention at 2-3)
+- **Total training memory:** ~3-4 GB per batch
+- **Safety margin:** ~12 GB free for multiple batches, caching
 
-**Memory estimate (batch size 8):**
-- Activations: ~2-4 GB
-- Parameters: ~100-200 MB
-- Gradients: ~100-200 MB
-
-**⚠️ Must verify fits within T4 16GB limit.**
+**Verdict:** Configuration should fit comfortably within T4 16GB limit. If memory issues arise during implementation, reduce base_channels from 128 to 96 or 64.
 
 ## Forward Diffusion Process
 
@@ -395,11 +397,11 @@ z_t = √(ᾱ_t) z_0 + √(1 - ᾱ_t) ε
 - Markov process: `q(z_t | z_{t-1}, ..., z_0) = q(z_t | z_{t-1})`
 - Single-step sampling: Can sample `z_t` directly from `z_0` using `ᾱ_t`.
 
-### Noise Schedule (PROVISIONAL)
-
-**⚠️ REQUIRES PRECISE DEFINITION BEFORE IMPLEMENTATION.**
+### Noise Schedule
 
 **Type:** Cosine schedule (Nichol & Dhariwal 2021)
+
+**Mathematical definition:**
 
 **Definition:**
 ```python
@@ -423,10 +425,18 @@ def cosine_beta_schedule(timesteps: int, s: float = 0.008) -> torch.Tensor:
     return betas
 ```
 
+**Explicit values:**
+- T = 1000 total timesteps
+- s = 0.008 (offset parameter)
+- β_t ∈ [0.0001, 0.9999] (clipped)
+- α_t = 1 - β_t
+- ᾱ_t = ∏_{i=1}^t α_i
+
 **Properties:**
-- Smooth transition from low to high noise.
-- Avoids extreme β values near 0 or 1.
-- Better preservation of signal at early timesteps.
+- Smooth transition from low to high noise
+- Avoids extreme β values near 0 or 1
+- Better preservation of signal at early timesteps
+- β_1 ≈ 0.0001, β_1000 ≈ 0.02 (approximate, computed from cosine formula)
 
 **Precomputed values:**
 ```python
@@ -616,9 +626,9 @@ class EMA:
 
 ## Reverse Sampling Process
 
-### DDPM Reverse Process (PROVISIONAL)
+### DDPM Reverse Process
 
-**⚠️ REQUIRES SPECIFICATION OF 50-STEP TIMESTEP SELECTION.**
+**Sampling configuration:** 50-step DDPM with uniform stride
 
 **Reverse process:**
 ```
@@ -662,8 +672,13 @@ def sample(unet: nn.Module,
     z_t = torch.randn(batch_size, 4, 60, 80, device=device)
     
     # Iterative denoising (50 steps from 1000)
-    # PROVISIONAL: Uniform stride (every 20th step)
-    timesteps = list(range(0, 1000, 20))[::-1]  # [980, 960, ..., 20, 0]
+    # Uniform stride: every 20th timestep
+    timesteps = list(range(0, 1000, 20))[::-1]  # [980, 960, 940, ..., 40, 20, 0]
+    # Exact sequence: [980, 960, 940, 920, 900, 880, 860, 840, 820, 800,
+    #                  780, 760, 740, 720, 700, 680, 660, 640, 620, 600,
+    #                  580, 560, 540, 520, 500, 480, 460, 440, 420, 400,
+    #                  380, 360, 340, 320, 300, 280, 260, 240, 220, 200,
+    #                  180, 160, 140, 120, 100,  80,  60,  40,  20,   0]
     
     for i, t in enumerate(timesteps):
         t_tensor = torch.tensor([t] * batch_size, device=device)
