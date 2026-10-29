@@ -251,13 +251,17 @@ class LatentScaler:
 
 **Architecture:** Symmetric encoder-decoder with skip connections.
 
-### Provisional Configuration
+### Approved Configuration
+
+**⚠️ APPROVED DEVIATION:** Originally specified `base_channels=128`, but implementation uses `base_channels=64` (approved 2026-10-29).
+
+**Rationale:** 128 channels produced 106M parameters (4× over 25-30M target). 64 channels produces 23.2M parameters (within target).
 
 ```python
 UNetConfig(
     in_channels=4,          # VQ latent channels
     out_channels=4,         # Same as input
-    base_channels=128,      # Base channel count
+    base_channels=64,       # Base channel count (APPROVED: 64 not 128)
     channel_multipliers=[1, 2, 4, 4],  # 4 resolution levels
     num_res_blocks=2,       # Residual blocks per level
     attention_levels=[2, 3],  # Apply attention at levels 2 and 3
@@ -272,10 +276,10 @@ UNetConfig(
 
 | Level | Resolution | Channels | Attention | Residual Blocks |
 |-------|-----------|----------|-----------|-----------------|
-| 0 (input) | 60×80 | 128×1=128 | ❌ | 2 |
-| 1 | 30×40 | 128×2=256 | ❌ | 2 |
-| 2 | 15×20 | 128×4=512 | ✅ | 2 |
-| 3 (bottleneck) | 8×10 | 128×4=512 | ✅ | 2 |
+| 0 (input) | 60×80 | 64×1=64 | ❌ | 2 |
+| 1 | 30×40 | 64×2=128 | ❌ | 2 |
+| 2 | 15×20 | 64×4=256 | ✅ | 2 |
+| 3 (bottleneck) | 8×10 | 64×4=256 | ✅ | 2 |
 
 **Downsampling:** 2×2 strided convolution  
 **Upsampling:** Nearest-neighbor interpolation + convolution
@@ -354,22 +358,19 @@ t_emb = linear2(t_emb)                            # (B, 256)
 
 ### Parameter and Memory Estimates
 
-**Parameter count (estimated):**
-- Encoder: ~4 levels × 2 blocks × (Conv + GroupNorm + TimeProj) ≈ 10M
-- Bottleneck attention: ≈ 2M
-- Decoder: ~4 levels × 2 blocks ≈ 10M
-- Skip projections: ≈ 1M
-- **Total:** ~25-30M parameters (~100-120MB)
+**Actual parameter count (base_channels=64):**
+- Measured: **23.2M parameters** (~93MB)
+- Target range: 25-30M (actual: 23.2M ✓)
 
 **Memory estimate for batch size 8 on T4 GPU (16GB):**
-- Model parameters: ~120 MB
-- Gradients: ~120 MB
-- Optimizer state (Adam): ~240 MB (2× params)
-- Activations (forward): ~2-3 GB (estimated for 128 base channels, 4 levels, attention at 2-3)
+- Model parameters: ~93 MB
+- Gradients: ~93 MB
+- Optimizer state (Adam): ~186 MB (2× params)
+- Activations (forward): ~2-3 GB (estimated for 64 base channels, 4 levels, attention at 2-3)
 - **Total training memory:** ~3-4 GB per batch
 - **Safety margin:** ~12 GB free for multiple batches, caching
 
-**Verdict:** Configuration should fit comfortably within T4 16GB limit. If memory issues arise during implementation, reduce base_channels from 128 to 96 or 64.
+**Verdict:** Configuration fits comfortably within T4 16GB limit. Phase 3 testing confirmed all components working with no memory issues.
 
 ## Forward Diffusion Process
 

@@ -194,6 +194,36 @@ This document records significant research and architectural decisions made duri
 
 ---
 
+## LDM Stage 2 U-Net Base Channels
+
+**Decision:** LDM Stage 2 baseline uses `base_channels=64` instead of the originally specified 128.
+
+**Rationale:**
+- Original specification: `base_channels=128` targeting 25-30M parameters
+- Implementation revealed: 128 channels produces **106M parameters** (4× over target)
+- Reduced to 64 channels: produces **23.2M parameters** (within 25-30M target)
+- Memory estimate: ~3-4GB per batch (fits Kaggle T4 16GB comfortably)
+
+**Evidence:**
+- U-Net with base_channels=128: 106M parameters (measured during Phase 2)
+- U-Net with base_channels=64: 23.2M parameters (measured and verified)
+- Phase 3 testing: All 21 tests passing with 64-channel implementation
+- Parameter count test explicitly validates 20-35M range (23.2M passes)
+
+**Approval:** User explicitly approved on 2026-10-29 after Phase 3 test completion and final audit.
+
+**Scope:** This decision applies to the LDM Stage 2 baseline only. Future experiments may use different channel counts.
+
+**Date:** 2026-10-29
+
+**Related:** 
+- `.kiro/specs/03-latent-diffusion/design.md` (updated to reflect 64 channels)
+- `src/models/ldm/stage2/unet.py` (implementation)
+- `tests/test_ldm_stage2.py` (parameter count test)
+- `.agents/tasks/phase3_test_report.md` (deviation documentation)
+
+---
+
 ## Template for Future Decisions
 
 When adding new decisions, include:

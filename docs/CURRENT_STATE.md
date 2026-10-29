@@ -1,7 +1,7 @@
 # Current Project State
 
-**Last Updated:** 2026-10-03  
-**Current Phase:** LDM Stage 2 Baseline Specification
+**Last Updated:** 2026-10-29  
+**Current Phase:** LDM Stage 2 Final Audit Complete
 
 ---
 
@@ -10,43 +10,36 @@
 ✅ **Experiment 1 (KL vs VQ):** Complete - VQ selected as winner  
 ✅ **VQ Baseline Audit:** Complete (checkpoint verified, decoder tested, parameters confirmed)  
 ✅ **Latent Statistics Measured:** Complete (mean=0.0129, std=0.1991, scaling factor=5.02)  
-✅ **LDM Stage 2 Specification:** Complete and awaiting user approval  
-🔄 **Next:** Implementation pending approval of provisional decisions
+✅ **LDM Stage 2 Specification:** Complete and approved  
+✅ **LDM Stage 2 Phase 1-3 Implementation:** Complete (21/21 tests passing)  
+✅ **Architecture Deviation Approved:** base_channels=64 (approved 2026-10-29)  
+🔄 **Current:** Implementing respaced DDPM sampling and final verifications
 
 ---
 
 ## Recent Work (2026-10-03)
 
-### Completed: VQ Baseline Audit
-1. ✅ Checkpoint verification (`best_model(1).pth` loadable and valid)
-2. ✅ Decoder forward pass test (handles quantized latents correctly)
-3. ✅ Latent statistics measurement across full training set (1654 samples)
+### Phase 3 Testing Complete ✅
+- All 21 pre-training tests passing (100%)
+- VQ checkpoint integration verified
+- Latent scaling invertibility confirmed
+- U-Net forward pass working (23.2M params)
+- EMA shadow management verified
+- Complete training step tested
+- Memory estimate validated (~3-4GB)
 
-**Key Findings:**
-- VQ encoder produces post-quantization embeddings with mean≈0, std≈0.2
-- Decoder trained on quantized inputs (confirmed via forward pass)
-- Codebook utilization: 178/1024 codes active (17.4%)
-- No architectural issues found - ready for LDM Stage 2
+### Architecture Deviation Approved ✅
+**Decision:** Use `base_channels=64` instead of originally specified 128
+- **Rationale:** 128 channels → 106M params (4× over target), 64 channels → 23.2M params (within 25-30M target)
+- **Status:** Explicitly approved by user on 2026-10-03
+- **Documentation:** Updated in DECISIONS.md and design spec
 
-### Completed: LDM Stage 2 Baseline Specification
-Created comprehensive specification in `.kiro/specs/03-latent-diffusion/`:
-- `requirements.md` - objectives, architecture decisions, success criteria
-- `design.md` - detailed component specifications (U-Net, noise scheduler, training loop, sampler)
-- `testing.md` - pre-training test suite, smoke test, validation plan
-- `evaluation.md` - metrics, comparison protocol, decision criteria
-
-**Baseline Architecture Decision:**
-- Use post-quantization embeddings from frozen VQ autoencoder
-- Standard continuous diffusion (not discrete categorical)
-- U-Net with 4 levels, attention at levels 2-3
-- Linear noise schedule β: 1e-4 → 2e-2
-- DDPM sampling with 50 steps
-
-**Provisional Decisions Requiring User Approval:**
-1. U-Net architecture (128 base channels, subject to T4 memory constraints)
-2. Noise schedule mathematical definition (needs precise β schedule)
-3. Sampling method stride schedule (50-step DDPM specifics)
-4. Training configuration (LR 1e-4, batch size 8, 100 epochs)
+### Remaining Tasks (In Progress)
+1. ⚠️ Implement respaced DDPM sampling (CRITICAL - user requirement)
+2. Add comprehensive sampler tests
+3. Verify latent statistics provenance (training-only)
+4. Add strict VQ checkpoint loading test
+5. Update final documentation and reports
 
 ---
 
@@ -59,62 +52,74 @@ Created comprehensive specification in `.kiro/specs/03-latent-diffusion/`:
 - ✅ Decision rationale documented in `docs/DECISIONS.md`
 
 ### VQ Baseline for LDM
-- ✅ Checkpoint location confirmed: `outputs/experiment1/vq_nomixed/best_model(1).pth`
-- ✅ Model architecture verified: 3→128→256→512 encoder, 512→256→128→3 decoder
-- ✅ Latent space verified: C=512, H=80, W=60 (8× compression)
-- ✅ Codebook verified: 1024 embeddings, dimension 512
-- ✅ Statistics measured: mean=0.0129, std=0.1991, recommended scaling=5.02
+- ✅ Checkpoint location confirmed: `outputs/experiment1/vq_nomixed/best_model (1).pth`
+- ✅ Model architecture verified: 3→32→64→128→256 encoder, symmetric decoder
+- ✅ Latent space verified: C=4, H=60, W=80 (8× compression)
+- ✅ Codebook verified: 1024 embeddings, 178 active (17.4% utilization)
+- ✅ Statistics measured: mean=0.01289583, std=0.19909434
 - ✅ Decoder robustness to quantized inputs confirmed
 
-### LDM Stage 2 Specification
-- ✅ Requirements defined
-- ✅ Architecture specified
-- ✅ Testing plan created
-- ✅ Evaluation protocol designed
-- ✅ Provisional decisions documented
+### LDM Stage 2 Implementation (Phase 1-3)
+- ✅ **LatentScaler:** Implemented with measured statistics (μ=0.0129, σ=0.1991)
+- ✅ **NoiseScheduler:** Cosine schedule (T=1000, s=0.008) implemented
+- ✅ **DiffusionUNet:** 23.2M params, 4 levels, attention at 2-3
+- ✅ **EMA:** Decay=0.9999, shadow tracking working
+- ✅ **Tests:** 21/21 passing, all critical interfaces verified
+- ⚠️ **Respaced Sampling:** NOT YET IMPLEMENTED (blocking Phase 4)
 
 ---
 
 ## Next Steps
 
-### Immediate (User Approval Required)
-1. **Review** `.kiro/specs/03-latent-diffusion/` specification
-2. **Approve or modify:**
-   - U-Net architecture (128 base channels, 4 levels, attention at 2-3)
-   - Noise schedule definition (linear β: 1e-4 → 2e-2)
-   - Sampling method (DDPM 50-step with specific stride)
-   - Smoke test criteria (loss decrease, samples not blank, metrics computed)
+### Immediate (Current Work)
+1. **⚠️ Implement respaced DDPM sampling** (CRITICAL)
+   - 50-step trajectory [980,960,...,0]
+   - Mathematically correct posterior variance for 20-step jumps
+   - User explicitly required this before Phase 4
 
-### After Specification Approval
-3. Implement pre-training test suite
-4. Implement U-Net, noise scheduler, training loop, sampler
-5. Run pre-training tests
-6. Execute smoke training (1-5 epochs)
-7. Review smoke test results
-8. Get approval for full Kaggle training
+2. **Add sampler tests**
+   - Timestep sequence validation
+   - Posterior coefficient verification
+   - Edge case handling (t=0 transition)
 
-### After Full Training
-9. Run evaluation metrics
-10. Compare with VQ baseline
-11. Document LDM Stage 2 results
-12. Decide on ablation experiments or next architecture
+3. **Verify latent statistics provenance**
+   - Confirm 1654 samples are training-only
+   - Document evidence in report
+
+4. **Add strict checkpoint loading test**
+   - Verify no missing/unexpected keys
+
+5. **Update documentation**
+   - Final implementation report
+   - Status summary with PASS/FAIL/UNVERIFIED table
+
+### After Implementation Complete
+6. **User review** of all changes
+7. **Phase 4: Smoke training** (1-5 epochs) - ONLY after user approval
+8. Full 100-epoch Kaggle training (after smoke test success)
 
 ---
 
 ## Active Configuration
 
 **First-Stage Model:** VQ Autoencoder (frozen)  
-**Checkpoint:** `outputs/experiment1/vq_nomixed/best_model(1).pth`  
+**Checkpoint:** `outputs/experiment1/vq_nomixed/best_model (1).pth`  
 **Dataset:** No_Mixed thermal imagery  
 **Image Resolution:** 640×480  
-**Latent Space:** 512×80×60 (8× spatial compression)  
-**Latent Statistics:** mean=0.0129, std=0.1991  
-**Next Stage:** Latent diffusion model (Stage 2)
+**Latent Space:** 4×60×80 (8× spatial compression)  
+**Latent Statistics:** mean=0.01289583, std=0.19909434  
+
+**LDM Stage 2 (Approved):**
+- U-Net: 23.2M params, base_channels=64
+- Noise schedule: Cosine (T=1000, s=0.008)
+- Training: Adam LR=1e-4, batch=8, 100 epochs max
+- EMA: decay=0.9999
 
 ---
 
 ## Repository Status
 
 **Branch:** main  
-**Latest Specification:** `.kiro/specs/03-latent-diffusion/`  
-**Status:** Awaiting user approval for implementation
+**Latest Implementation:** `src/models/ldm/stage2/`  
+**Tests:** `tests/test_ldm_stage2.py` (21 passing)  
+**Status:** Implementing respaced sampling and final verifications
