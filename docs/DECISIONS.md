@@ -160,6 +160,40 @@ This document records significant research and architectural decisions made duri
 
 ---
 
+## LDM Stage 2 Baseline Architecture
+
+**Decision:** LDM Stage 2 baseline uses post-quantization embeddings from frozen VQ autoencoder with standard continuous diffusion.
+
+**Rationale:**
+- Proven approach in LDM paper (Rombach et al. 2022)
+- VQ decoder was trained on quantized inputs (verified via forward pass test)
+- Standard continuous diffusion is simpler than discrete categorical diffusion
+- Faster iteration to establish working baseline
+- Resource constraints favor single baseline first rather than parallel exploration
+
+**Alternatives Considered:**
+- Pre-quantization continuous embeddings (deferred to future ablation)
+- Discrete categorical diffusion over codebook indices (deferred to future ablation)
+- Multi-baseline parallel development (rejected due to resource constraints)
+
+**Evidence:**
+- VQ checkpoint verified and loadable (`outputs/experiment1/vq_nomixed/best_model(1).pth`)
+- Latent statistics measured: mean=0.0129, std=0.1991, recommended scaling=5.02
+- Audit confirmed decoder expects quantized latents (successful forward pass)
+- VQ won Experiment 1 comparison (superior reconstruction and boundary preservation)
+
+**Provisional Components (Subject to User Approval):**
+- U-Net architecture: 128 base channels, 4 levels, attention at levels 2-3
+- Noise schedule: linear β from 1e-4 to 2e-2 over 1000 timesteps
+- Sampling: DDPM 50-step with uniform stride
+- Training: LR 1e-4, batch size 8, AdamW, 100 epochs, EMA decay 0.9999
+
+**Date:** 2026-10-03
+
+**Related:** `.kiro/specs/03-latent-diffusion/`, `.agents/tasks/vq_baseline_audit_final.md`
+
+---
+
 ## Template for Future Decisions
 
 When adding new decisions, include:

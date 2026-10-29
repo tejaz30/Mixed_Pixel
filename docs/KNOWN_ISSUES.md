@@ -69,6 +69,69 @@ This document tracks known limitations, uncertainties, and unresolved technical/
 
 ## Model Architecture
 
+### LDM Stage 2 Baseline - Provisional Decisions
+
+**Issue:** Several architectural and training decisions are provisional and require user approval before implementation.
+
+**Provisional Decisions:**
+1. **U-Net architecture:** 128 base channels, 4 levels, attention at levels 2-3
+   - Subject to memory validation on T4 GPU
+   - May need to reduce base channels to 64 if memory exceeds 15GB
+2. **Noise schedule:** Linear β from 1e-4 to 2e-2 over 1000 timesteps
+   - Requires precise mathematical definition before implementation
+   - Alternative schedules (cosine, sigmoid) not yet evaluated
+3. **Sampling method:** DDPM 50-step with uniform stride
+   - Requires precise stride schedule definition
+   - DDIM fast sampling not yet implemented
+4. **Training configuration:** LR 1e-4, batch size 8, 100 epochs
+   - Provisional pending smoke test results
+   - May require adjustment based on empirical convergence
+
+**Impact:**
+- Implementation blocked until user reviews and approves specification
+- Cannot begin coding until architectural decisions are finalized
+
+**Mitigation:**
+- Comprehensive specification created in `.kiro/specs/03-latent-diffusion/`
+- Pre-training test suite planned to validate decisions early
+- Smoke test (1-5 epochs) planned before full Kaggle training
+
+**Status:** Awaiting user approval
+
+**Related:** `.kiro/specs/03-latent-diffusion/requirements.md`, `design.md`
+
+---
+
+### VQ First-Stage Known Limitations
+
+**Issue:** VQ autoencoder has low codebook utilization and may produce off-manifold latents during diffusion.
+
+**Limitations:**
+1. **Codebook underutilization:** Only 178/1024 codes active (17.4%)
+   - Most codes never used during training
+   - Latent space has large unused regions
+2. **Off-manifold latents:** Diffusion may generate interpolations between codebook vectors
+   - VQ decoder was trained only on exact codebook embeddings
+   - Decoder robustness to off-manifold inputs is unknown
+3. **Discrete quantization artifacts:** VQ reconstruction shows slight blocky artifacts compared to KL
+
+**Impact:**
+- Diffusion model may generate latents that VQ decoder handles poorly
+- May see quality degradation or artifacts in diffusion-based reconstructions
+- Requires empirical testing to assess practical severity
+
+**Mitigation:**
+- Smoke test will include off-manifold latent testing
+- Pre-training test suite includes decoder robustness checks
+- Will monitor reconstruction quality during training
+- Can consider codebook expansion or continuous-embedding ablation if issues arise
+
+**Status:** Accepted limitation for baseline; may address in future ablations
+
+**Related:** `.kiro/specs/03-latent-diffusion/testing.md`, `docs/exp1_evaluation_summary.md`
+
+---
+
 ### Later LDM Architecture Undecided
 
 **Issue:** The latent diffusion model architecture (Stage 2) has not been finalized.
