@@ -1,0 +1,501 @@
+{
+  "summary": {
+    "evaluation_type": "LDM Stage 2 First-Stage Selection",
+    "comparison_date": "2026-10-26T17:40:31.084279",
+    "total_samples": 52,
+    "key_findings": [
+      "VQ shows significantly better reconstruction (MSE, p=0.0000)",
+      "VQ shows significantly better structural similarity (SSIM, p=0.0000)",
+      "VQ shows better boundary preservation (ratio: KL=4.477, VQ=3.722)",
+      "LDM readiness: VQ preferred (KL=0.613, VQ=0.750)",
+      "VQ codebook underutilized: 17.4% active codes",
+      "KL divergence relatively high: 234.479 (may indicate posterior collapse risk)"
+    ],
+    "recommendation": {
+      "note": "This is a technical assessment. Final architectural decision is made by the user.",
+      "considerations": [
+        "Reconstruction quality (MSE): VQ performs better",
+        "Structural similarity (SSIM): VQ performs better",
+        "LDM readiness: VQ preferred"
+      ],
+      "preliminary_suggestion": "VQ may be preferred based on reconstruction quality"
+    }
+  },
+  "reconstruction_comparison": {
+    "mse": {
+      "metric": "mse",
+      "kl": {
+        "mean": 0.0037781517536271936,
+        "std": 0.00037262993548490647,
+        "median": 0.0037394011160358787,
+        "min": 0.003103683382505551,
+        "max": 0.005115778505569324
+      },
+      "vq": {
+        "mean": 0.0017660404681429588,
+        "std": 0.00018122523214042535,
+        "median": 0.001752177173329983,
+        "min": 0.0014339000917971134,
+        "max": 0.00241484388243407
+      },
+      "paired_t_test": {
+        "t_statistic": 71.53790972267605,
+        "p_value": 7.942777604966529e-53,
+        "significant_at_0.05": true,
+        "interpretation": "VQ significantly better"
+      },
+      "wilcoxon_test": {
+        "statistic": 0.0,
+        "p_value": 3.503864964208263e-10,
+        "significant_at_0.05": true
+      },
+      "effect_size": {
+        "cohens_d": 6.867086563125258,
+        "interpretation": "large"
+      },
+      "win_lose_tie": {
+        "kl_wins": 0,
+        "vq_wins": 52,
+        "ties": 0,
+        "total": 52
+      }
+    },
+    "ssim": {
+      "metric": "ssim",
+      "kl": {
+        "mean": 0.4840339431539178,
+        "std": 0.02050487822595738,
+        "median": 0.4825597684830427,
+        "min": 0.44049840420484543,
+        "max": 0.5364424139261246
+      },
+      "vq": {
+        "mean": 0.7524149237821499,
+        "std": 0.008519966774124895,
+        "median": 0.7532277852296829,
+        "min": 0.7279873490333557,
+        "max": 0.7686084732413292
+      },
+      "paired_t_test": {
+        "t_statistic": -73.68531304908467,
+        "p_value": 1.782596483621581e-53,
+        "significant_at_0.05": true,
+        "interpretation": "KL significantly better"
+      },
+      "wilcoxon_test": {
+        "statistic": 0.0,
+        "p_value": 3.503864964208263e-10,
+        "significant_at_0.05": true
+      },
+      "effect_size": {
+        "cohens_d": -17.093281261383094,
+        "interpretation": "large"
+      },
+      "win_lose_tie": {
+        "kl_wins": 52,
+        "vq_wins": 0,
+        "ties": 0,
+        "total": 52
+      }
+    },
+    "psnr": {
+      "metric": "psnr",
+      "kl": {
+        "mean": 24.347253816723516,
+        "std": 0.3938357685773263,
+        "median": 24.366494510636592,
+        "min": 23.006828628985613,
+        "max": 25.107296249881713
+      },
+      "vq": {
+        "mean": 27.650957624880398,
+        "std": 0.3989741087608079,
+        "median": 27.69072415837308,
+        "min": 26.28183038976519,
+        "max": 28.439087096440637
+      },
+      "paired_t_test": {
+        "t_statistic": -219.33122437807006,
+        "p_value": 1.5185497316610242e-77,
+        "significant_at_0.05": true,
+        "interpretation": "KL significantly better"
+      },
+      "wilcoxon_test": {
+        "statistic": 0.0,
+        "p_value": 3.503864964208263e-10,
+        "significant_at_0.05": true
+      },
+      "effect_size": {
+        "cohens_d": -8.333988852411462,
+        "interpretation": "large"
+      },
+      "win_lose_tie": {
+        "kl_wins": 52,
+        "vq_wins": 0,
+        "ties": 0,
+        "total": 52
+      }
+    },
+    "boundary_mse": {
+      "metric": "boundary_mse",
+      "kl": {
+        "mean": 0.008910687291063368,
+        "std": 0.0007445143432923274,
+        "median": 0.008839899441227317,
+        "min": 0.007259958540089428,
+        "max": 0.011082825250923634
+      },
+      "vq": {
+        "mean": 0.003860385055304505,
+        "std": 0.00032110251924681083,
+        "median": 0.003813469098531641,
+        "min": 0.0032049602014012635,
+        "max": 0.004860236920649186
+      },
+      "paired_t_test": {
+        "t_statistic": 79.24691712309402,
+        "p_value": 4.498650791624976e-55,
+        "significant_at_0.05": true,
+        "interpretation": "VQ significantly better"
+      },
+      "wilcoxon_test": {
+        "statistic": 0.0,
+        "p_value": 3.503864964208263e-10,
+        "significant_at_0.05": true
+      },
+      "effect_size": {
+        "cohens_d": 8.808605416173926,
+        "interpretation": "large"
+      },
+      "win_lose_tie": {
+        "kl_wins": 0,
+        "vq_wins": 52,
+        "ties": 0,
+        "total": 52
+      }
+    },
+    "non_boundary_mse": {
+      "metric": "non_boundary_mse",
+      "kl": {
+        "mean": 0.002067306210404077,
+        "std": 0.0002621040999554883,
+        "median": 0.00202124631323386,
+        "min": 0.0017069344612536952,
+        "max": 0.003126763040199876
+      },
+      "vq": {
+        "mean": 0.0010679254683521157,
+        "std": 0.00013848476239088295,
+        "median": 0.0010563774121692404,
+        "min": 0.0008435469353571534,
+        "max": 0.0015997126974980347
+      },
+      "paired_t_test": {
+        "t_statistic": 54.7833227817366,
+        "p_value": 5.431367522293067e-47,
+        "significant_at_0.05": true,
+        "interpretation": "VQ significantly better"
+      },
+      "wilcoxon_test": {
+        "statistic": 0.0,
+        "p_value": 3.503864964208263e-10,
+        "significant_at_0.05": true
+      },
+      "effect_size": {
+        "cohens_d": 4.767477602039657,
+        "interpretation": "large"
+      },
+      "win_lose_tie": {
+        "kl_wins": 0,
+        "vq_wins": 52,
+        "ties": 0,
+        "total": 52
+      }
+    },
+    "boundary_ratio": {
+      "metric": "boundary_ratio",
+      "kl": {
+        "mean": 4.477038252048003,
+        "std": 0.22641179829931643,
+        "median": 4.471280376116434,
+        "min": 3.732662945985794,
+        "max": 5.027054846286774
+      },
+      "vq": {
+        "mean": 3.7222667382313657,
+        "std": 0.17027186433473054,
+        "median": 3.740449085831642,
+        "min": 3.136091947555542,
+        "max": 4.059949576854706
+      },
+      "paired_t_test": {
+        "t_statistic": 38.403946328827004,
+        "p_value": 2.6092621868991778e-39,
+        "significant_at_0.05": true,
+        "interpretation": "VQ significantly better"
+      },
+      "wilcoxon_test": {
+        "statistic": 0.0,
+        "p_value": 3.503864964208263e-10,
+        "significant_at_0.05": true
+      },
+      "effect_size": {
+        "cohens_d": 3.767861591607853,
+        "interpretation": "large"
+      },
+      "win_lose_tie": {
+        "kl_wins": 0,
+        "vq_wins": 52,
+        "ties": 0,
+        "total": 52
+      }
+    },
+    "gradient_preservation": {
+      "metric": "gradient_preservation",
+      "kl": {
+        "mean": 0.18546502206187981,
+        "std": 0.010032283111058762,
+        "median": 0.18512552976608276,
+        "min": 0.15382659435272217,
+        "max": 0.20975156128406525
+      },
+      "vq": {
+        "mean": 0.5607670408028823,
+        "std": 0.012702280845471349,
+        "median": 0.5622173547744751,
+        "min": 0.5293325781822205,
+        "max": 0.5834411382675171
+      },
+      "paired_t_test": {
+        "t_statistic": -128.3658794993678,
+        "p_value": 1.0581768920003134e-65,
+        "significant_at_0.05": true,
+        "interpretation": "KL significantly better"
+      },
+      "wilcoxon_test": {
+        "statistic": 0.0,
+        "p_value": 3.503864964208263e-10,
+        "significant_at_0.05": true
+      },
+      "effect_size": {
+        "cohens_d": -32.79059619856056,
+        "interpretation": "large"
+      },
+      "win_lose_tie": {
+        "kl_wins": 52,
+        "vq_wins": 0,
+        "ties": 0,
+        "total": 52
+      }
+    }
+  },
+  "latent_comparison": {
+    "kl_properties": {
+      "readiness_score": 0.6125,
+      "readiness_factors": {
+        "normality": 0.5,
+        "stability": 0.5,
+        "effective_capacity": 0.75,
+        "spatial_structure": 0.7
+      },
+      "distribution": {
+        "global_mean": -0.0028217285871505737,
+        "global_std": 0.14723412692546844,
+        "global_min": -1.380597472190857,
+        "global_max": 2.1719374656677246,
+        "channel_means": [
+          -0.004397852346301079,
+          0.004490403924137354,
+          -0.010090157389640808,
+          -0.0012893095845356584
+        ],
+        "channel_stds": [
+          0.12628427147865295,
+          0.07129904627799988,
+          0.10522498935461044,
+          0.23344570398330688
+        ],
+        "kurtosis_mean": 11.844993591308594,
+        "skewness_mean": 1.0416758060455322
+      },
+      "normality": {
+        "shapiro_statistic": 0.7159342096964261,
+        "shapiro_p_value": 2.1174019205203478e-68,
+        "ks_statistic": 0.22850389927754167,
+        "ks_p_value": 5.9468796626557885e-230,
+        "anderson_statistic": 376.87725284641965,
+        "anderson_critical_values": [
+          0.576,
+          0.655,
+          0.786,
+          0.917,
+          1.091
+        ],
+        "normality_assessment": "non_normal"
+      },
+      "spatial_correlation": {
+        "mean_horizontal_correlation": 0.8823717831213224,
+        "mean_vertical_correlation": 0.9579389188480386,
+        "spatial_smoothness": 0.9201553509846805
+      },
+      "effective_dimensionality": {
+        "total_dimensions": 4,
+        "effective_dimensions": 3,
+        "variance_threshold": 0.99,
+        "explained_variance_ratio": [
+          0.6578807360076503,
+          0.18693529184816712,
+          0.14804001900897876,
+          0.00714395313520391
+        ],
+        "cumulative_variance": [
+          0.6578807360076503,
+          0.8448160278558174,
+          0.9928560468647962,
+          1.0000000000000002
+        ],
+        "dimensionality_ratio": 0.75
+      },
+      "interpretation": "moderate_readiness"
+    },
+    "vq_properties": {
+      "readiness_score": 0.75,
+      "readiness_factors": {
+        "normality": 0.5,
+        "stability": 1.0,
+        "effective_capacity": 0.5,
+        "spatial_structure": 1.0
+      },
+      "distribution": {
+        "global_mean": 0.013042217120528221,
+        "global_std": 0.19921930134296417,
+        "global_min": -1.8445848226547241,
+        "global_max": 0.5819209814071655,
+        "channel_means": [
+          -0.1075156182050705,
+          0.06538435071706772,
+          -0.013309366069734097,
+          0.10760950297117233
+        ],
+        "channel_stds": [
+          0.06448852270841599,
+          0.19272449612617493,
+          0.04956037178635597,
+          0.29679009318351746
+        ],
+        "kurtosis_mean": -0.14797091484069824,
+        "skewness_mean": -0.23076006770133972
+      },
+      "normality": {
+        "shapiro_statistic": 0.9014505055771402,
+        "shapiro_p_value": 5.778379278572859e-49,
+        "ks_statistic": 0.1573055885946535,
+        "ks_p_value": 1.565713121026729e-108,
+        "anderson_statistic": 197.47508358586583,
+        "anderson_critical_values": [
+          0.576,
+          0.655,
+          0.786,
+          0.917,
+          1.091
+        ],
+        "normality_assessment": "non_normal"
+      },
+      "spatial_correlation": {
+        "mean_horizontal_correlation": 0.7632411914276185,
+        "mean_vertical_correlation": 0.7366602463698769,
+        "spatial_smoothness": 0.7499507188987478
+      },
+      "effective_dimensionality": {
+        "total_dimensions": 4,
+        "effective_dimensions": 2,
+        "variance_threshold": 0.99,
+        "explained_variance_ratio": [
+          0.8580407569961733,
+          0.14067188722789378,
+          0.0011996831812224184,
+          8.767259471068059e-05
+        ],
+        "cumulative_variance": [
+          0.8580407569961733,
+          0.9987126442240671,
+          0.9999123274052896,
+          1.0000000000000002
+        ],
+        "dimensionality_ratio": 0.5
+      },
+      "interpretation": "moderate_readiness"
+    },
+    "ldm_readiness_comparison": {
+      "kl_score": 0.6125,
+      "vq_score": 0.75,
+      "difference": 0.13749999999999996,
+      "recommendation": "VQ preferred"
+    }
+  },
+  "failure_analysis": {
+    "kl_only_failures": [],
+    "vq_only_failures": [],
+    "both_failures": [
+      "sample_0000",
+      "sample_0001",
+      "sample_0002",
+      "sample_0003",
+      "sample_0004",
+      "sample_0005",
+      "sample_0006",
+      "sample_0007",
+      "sample_0008",
+      "sample_0009",
+      "sample_0010",
+      "sample_0011",
+      "sample_0012",
+      "sample_0013",
+      "sample_0014",
+      "sample_0015",
+      "sample_0016",
+      "sample_0017",
+      "sample_0018",
+      "sample_0019",
+      "sample_0020",
+      "sample_0021",
+      "sample_0022",
+      "sample_0023",
+      "sample_0024",
+      "sample_0025",
+      "sample_0026",
+      "sample_0027",
+      "sample_0028",
+      "sample_0029",
+      "sample_0030",
+      "sample_0031",
+      "sample_0032",
+      "sample_0033",
+      "sample_0034",
+      "sample_0035",
+      "sample_0036",
+      "sample_0037",
+      "sample_0038",
+      "sample_0039",
+      "sample_0040",
+      "sample_0041",
+      "sample_0042",
+      "sample_0043",
+      "sample_0044",
+      "sample_0045",
+      "sample_0046",
+      "sample_0047",
+      "sample_0048",
+      "sample_0049",
+      "sample_0050",
+      "sample_0051"
+    ],
+    "failure_counts": {
+      "kl_only": 0,
+      "vq_only": 0,
+      "both": 52,
+      "total_samples": 52
+    }
+  },
+  "sample_count": 52
+}

@@ -1,0 +1,203 @@
+{
+  "reconstruction_metrics": {
+    "mse": {
+      "mean": 0.0037789410199511094,
+      "std": 0.0009211195945685116,
+      "min": 0.002360666636377573,
+      "max": 0.00652147876098752
+    },
+    "ssim": {
+      "mean": 0.4840087303936769,
+      "std": 0.049122609642945146,
+      "min": 0.3223472535610199,
+      "max": 0.5981047749519348
+    },
+    "psnr": {
+      "mean": 24.34661531973083,
+      "std": 1.0067645277607125
+    }
+  },
+  "boundary_metrics": {
+    "boundary_mse": {
+      "mean": 0.008912692514612623,
+      "std": 0.0018394212150476701,
+      "min": 0.005526638589799404,
+      "max": 0.014470510184764862
+    },
+    "non_boundary_mse": {
+      "mean": 0.002067690153363282,
+      "std": 0.000655592196089153
+    },
+    "boundary_ratio": {
+      "mean": 4.477058691678992,
+      "std": 0.6970886622006506
+    },
+    "gradient_preservation": {
+      "mean": 0.1854550689458847,
+      "std": 0.023632071912288666
+    }
+  },
+  "kl_diagnostics": {
+    "posterior_statistics": {
+      "mean": {
+        "global_mean": -0.0028217288199812174,
+        "global_std": 0.14723414182662964,
+        "per_channel_mean": [
+          -0.004397853277623653,
+          0.004490402527153492,
+          -0.010090152733027935,
+          -0.0012893095845356584
+        ],
+        "per_channel_std": [
+          0.12628425657749176,
+          0.07129904627799988,
+          0.10522499680519104,
+          0.23344570398330688
+        ]
+      },
+      "logvar": {
+        "global_mean": -0.024819325655698776,
+        "global_std": 0.07351508736610413,
+        "per_channel_mean": [
+          -0.016568545252084732,
+          -0.007718268316239119,
+          -0.013989132829010487,
+          -0.06100136414170265
+        ]
+      }
+    },
+    "kl_divergence": {
+      "mean": 234.47941853449896,
+      "std": 11.505594041082857,
+      "min": 215.4165802001953,
+      "max": 270.0020446777344
+    },
+    "active_dimensions": {
+      "count": 3,
+      "ratio": 0.75,
+      "channel_variances": [
+        0.01594771444797516,
+        0.005083554424345493,
+        0.01107229944318533,
+        0.054496899247169495
+      ]
+    }
+  },
+  "latent_distribution": {
+    "global_distribution": {
+      "global_mean": -0.0028217288199812174,
+      "global_std": 0.14723414182662964,
+      "global_min": -1.380597472190857,
+      "global_max": 2.1719374656677246,
+      "channel_means": [
+        -0.004397853277623653,
+        0.004490402527153492,
+        -0.010090152733027935,
+        -0.0012893095845356584
+      ],
+      "channel_stds": [
+        0.12628425657749176,
+        0.07129904627799988,
+        0.10522499680519104,
+        0.23344570398330688
+      ],
+      "kurtosis_mean": 11.844993591308594,
+      "skewness_mean": 1.0416758060455322
+    },
+    "stability": {
+      "mean_stability_cv": -0.3053078188028054,
+      "std_stability_cv": 0.02454138573903348,
+      "interpretation": "Lower CV indicates more stable encoding"
+    },
+    "effective_dimensionality": {
+      "total_dimensions": 4,
+      "effective_dimensions": 3,
+      "variance_threshold": 0.99,
+      "explained_variance_ratio": [
+        0.6563631343915454,
+        0.18928856844313452,
+        0.14744814622590585,
+        0.006900150939414279
+      ],
+      "cumulative_variance": [
+        0.6563631343915454,
+        0.8456517028346799,
+        0.9930998490605858,
+        1.0
+      ],
+      "dimensionality_ratio": 0.75
+    },
+    "spatial_correlation_summary": {
+      "mean": 0.920143005655505,
+      "std": 0.003013862198746287
+    }
+  },
+  "ldm_readiness": {
+    "readiness_score": 0.6125,
+    "readiness_factors": {
+      "normality": 0.5,
+      "stability": 0.5,
+      "effective_capacity": 0.75,
+      "spatial_structure": 0.7
+    },
+    "distribution": {
+      "global_mean": -0.0028217285871505737,
+      "global_std": 0.14723412692546844,
+      "global_min": -1.380597472190857,
+      "global_max": 2.1719374656677246,
+      "channel_means": [
+        -0.004397852346301079,
+        0.004490403924137354,
+        -0.010090157389640808,
+        -0.0012893095845356584
+      ],
+      "channel_stds": [
+        0.12628427147865295,
+        0.07129904627799988,
+        0.10522498935461044,
+        0.23344570398330688
+      ],
+      "kurtosis_mean": 11.844993591308594,
+      "skewness_mean": 1.0416758060455322
+    },
+    "normality": {
+      "shapiro_statistic": 0.7159342096964261,
+      "shapiro_p_value": 2.1174019205203478e-68,
+      "ks_statistic": 0.22850389927754167,
+      "ks_p_value": 5.9468796626557885e-230,
+      "anderson_statistic": 376.87725284641965,
+      "anderson_critical_values": [
+        0.576,
+        0.655,
+        0.786,
+        0.917,
+        1.091
+      ],
+      "normality_assessment": "non_normal"
+    },
+    "spatial_correlation": {
+      "mean_horizontal_correlation": 0.8823717831213224,
+      "mean_vertical_correlation": 0.9579389188480386,
+      "spatial_smoothness": 0.9201553509846805
+    },
+    "effective_dimensionality": {
+      "total_dimensions": 4,
+      "effective_dimensions": 3,
+      "variance_threshold": 0.99,
+      "explained_variance_ratio": [
+        0.6578807360076503,
+        0.18693529184816712,
+        0.14804001900897876,
+        0.00714395313520391
+      ],
+      "cumulative_variance": [
+        0.6578807360076503,
+        0.8448160278558174,
+        0.9928560468647962,
+        1.0000000000000002
+      ],
+      "dimensionality_ratio": 0.75
+    },
+    "interpretation": "moderate_readiness"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "training": {
+    "total_epochs": 32,
+    "best_epoch": 27,
+    "best_val_loss": 0.051015,
+    "final_train_loss": 0.059265,
+    "final_val_loss": 0.062878,
+    "early_stopped": true,
+    "mean_gap": 0.0010896562500000003,
+    "final_gap": 0.003613000000000005
+  },
+  "vq_baseline": {
+    "train": {
+      "mse_mean": 0.0017684036865830421,
+      "mse_std": 0.0004056476755067706,
+      "ssim_mean": 0.753112258542563,
+      "ssim_std": 0.021958083443519436,
+      "psnr_mean": 27.524185180664062
+    },
+    "validation": {
+      "mse_mean": 0.0016898282337933779,
+      "mse_std": 0.0004665413871407509,
+      "ssim_mean": 0.7723165945364878,
+      "ssim_std": 0.008900890795490474,
+      "psnr_mean": 27.721574783325195
+    }
+  },
+  "ldm_generation": {
+    "num_samples_generated": 32,
+    "num_inference_steps": 50
+  }
+}

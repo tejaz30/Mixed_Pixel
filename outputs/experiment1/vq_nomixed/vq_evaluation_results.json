@@ -1,0 +1,183 @@
+{
+  "reconstruction_metrics": {
+    "mse": {
+      "mean": 0.0017665155551954204,
+      "std": 0.00044155509006387676,
+      "min": 0.0011843463871628046,
+      "max": 0.0032293316908180714
+    },
+    "ssim": {
+      "mean": 0.7523810875012679,
+      "std": 0.025217024873098293,
+      "min": 0.651561439037323,
+      "max": 0.7931804060935974
+    },
+    "psnr": {
+      "mean": 27.650159781961708,
+      "std": 1.0010978703691413
+    }
+  },
+  "boundary_metrics": {
+    "boundary_mse": {
+      "mean": 0.0038611641758827917,
+      "std": 0.0008040970648405406,
+      "min": 0.0026666815392673016,
+      "max": 0.0071512130089104176
+    },
+    "non_boundary_mse": {
+      "mean": 0.0010682992096697902,
+      "std": 0.0003309728913973478
+    },
+    "boundary_ratio": {
+      "mean": 3.721698800722758,
+      "std": 0.4346306654721378
+    },
+    "gradient_preservation": {
+      "mean": 0.5607196092605591,
+      "std": 0.0362919382750988
+    }
+  },
+  "vq_diagnostics": {
+    "codebook_usage": {
+      "active_codes": 178,
+      "dead_codes": 846,
+      "active_ratio": 0.173828125,
+      "usage_entropy": 4.5063874595261275,
+      "usage_perplexity": 90.59395233268756,
+      "max_code_usage": 219365,
+      "min_code_usage": 269,
+      "mean_perplexity": 89.61470196748769,
+      "std_perplexity": 1.9590198616412344
+    },
+    "quantization_error": {
+      "mean_quant_mse": 9.342632046564876e-05,
+      "std_quant_mse": 3.93987438342976e-06,
+      "max_quant_mse": 0.00010575761552900076,
+      "min_quant_mse": 8.40979118947871e-05
+    },
+    "global_latent_stats": {
+      "pre_quant_mean": 0.013434317894279957,
+      "pre_quant_std": 0.19921141862869263,
+      "post_quant_mean": 0.013042217120528221,
+      "post_quant_std": 0.19921930134296417,
+      "latent_correlation": 0.9985128045082092
+    }
+  },
+  "latent_distribution": {
+    "global_distribution": {
+      "global_mean": 0.013042217120528221,
+      "global_std": 0.19921930134296417,
+      "global_min": -1.8445848226547241,
+      "global_max": 0.5819209814071655,
+      "channel_means": [
+        -0.1075156107544899,
+        0.06538431346416473,
+        -0.013309367001056671,
+        0.10760948807001114
+      ],
+      "channel_stds": [
+        0.06448852270841599,
+        0.19272451102733612,
+        0.04956037551164627,
+        0.29679009318351746
+      ],
+      "kurtosis_mean": -0.14797091484069824,
+      "skewness_mean": -0.23076006770133972
+    },
+    "stability": {
+      "mean_stability_cv": 0.07596244604769242,
+      "std_stability_cv": 0.003678029269577125,
+      "interpretation": "Lower CV indicates more stable encoding"
+    },
+    "effective_dimensionality": {
+      "total_dimensions": 4,
+      "effective_dimensions": 2,
+      "variance_threshold": 0.99,
+      "explained_variance_ratio": [
+        0.851691309847705,
+        0.14704239958581922,
+        0.0011761888928229916,
+        9.010167365277608e-05
+      ],
+      "cumulative_variance": [
+        0.851691309847705,
+        0.9987337094335242,
+        0.9999098983263472,
+        1.0
+      ],
+      "dimensionality_ratio": 0.5
+    },
+    "spatial_correlation_summary": {
+      "mean": 0.7499520308041987,
+      "std": 0.013443245755174396
+    }
+  },
+  "ldm_readiness": {
+    "readiness_score": 0.75,
+    "readiness_factors": {
+      "normality": 0.5,
+      "stability": 1.0,
+      "effective_capacity": 0.5,
+      "spatial_structure": 1.0
+    },
+    "distribution": {
+      "global_mean": 0.013042217120528221,
+      "global_std": 0.19921930134296417,
+      "global_min": -1.8445848226547241,
+      "global_max": 0.5819209814071655,
+      "channel_means": [
+        -0.1075156182050705,
+        0.06538435071706772,
+        -0.013309366069734097,
+        0.10760950297117233
+      ],
+      "channel_stds": [
+        0.06448852270841599,
+        0.19272449612617493,
+        0.04956037178635597,
+        0.29679009318351746
+      ],
+      "kurtosis_mean": -0.14797091484069824,
+      "skewness_mean": -0.23076006770133972
+    },
+    "normality": {
+      "shapiro_statistic": 0.9014505055771402,
+      "shapiro_p_value": 5.778379278572859e-49,
+      "ks_statistic": 0.1573055885946535,
+      "ks_p_value": 1.565713121026729e-108,
+      "anderson_statistic": 197.47508358586583,
+      "anderson_critical_values": [
+        0.576,
+        0.655,
+        0.786,
+        0.917,
+        1.091
+      ],
+      "normality_assessment": "non_normal"
+    },
+    "spatial_correlation": {
+      "mean_horizontal_correlation": 0.7632411914276185,
+      "mean_vertical_correlation": 0.7366602463698769,
+      "spatial_smoothness": 0.7499507188987478
+    },
+    "effective_dimensionality": {
+      "total_dimensions": 4,
+      "effective_dimensions": 2,
+      "variance_threshold": 0.99,
+      "explained_variance_ratio": [
+        0.8580407569961733,
+        0.14067188722789378,
+        0.0011996831812224184,
+        8.767259471068059e-05
+      ],
+      "cumulative_variance": [
+        0.8580407569961733,
+        0.9987126442240671,
+        0.9999123274052896,
+        1.0000000000000002
+      ],
+      "dimensionality_ratio": 0.5
+    },
+    "interpretation": "moderate_readiness"
+  }
+}

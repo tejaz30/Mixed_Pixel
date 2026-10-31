@@ -267,3 +267,41 @@ When documenting new issues:
 ---
 
 **Last Updated:** 2026-10-03
+
+
+---
+
+## 10. Kaggle Notebook Import Path Issues
+
+**Status:** ⚠️ DOCUMENTED SOLUTION
+
+**Description:**
+- Kaggle notebooks using GitHub clone/pull require specific import patterns
+- `sys.path.insert(0, str(WORK_DIR / 'src'))` adds `src/` to path
+- Modules inside `src/` become top-level imports (NO `src.` prefix)
+
+**Correct Import Pattern:**
+```python
+# Environment setup
+sys.path.insert(0, str(WORK_DIR / 'src'))  # Adds src/ to path
+
+# Then imports work WITHOUT src. prefix:
+from models.ldm.first_stage.vq.model import VQAutoencoder  # ✅ CORRECT
+from models.ldm.stage2.latent_scaler import LatentScaler
+from models.ldm.stage2.unet import DiffusionUNet
+from datasets.thermal_dataset import ThermalImageDataset
+
+# NOT:
+from src.models.vq_autoencoder import VQAutoencoder  # ❌ WRONG
+```
+
+**Key Files:**
+- VQ Autoencoder: `src/models/ldm/first_stage/vq/model.py` (not `src/models/vq_autoencoder.py`)
+- KL Autoencoder: `src/models/ldm/first_stage/kl/model.py`
+- LDM Stage 2: `src/models/ldm/stage2/`
+
+**Working Examples:**
+- See `notebooks/kaggle_kl_vs_vq_FIXED.ipynb` for reference pattern
+- All imports work identically in Kaggle and local Jupyter
+
+**Resolution:** Use this pattern in all future Kaggle notebooks. Do NOT add `src.` prefix when `sys.path` points to `src/` directory.
